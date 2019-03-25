@@ -1,5 +1,5 @@
 # Pose Estimation for Mobile
-single pose estimation for mobile
+> This repository is forked from [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) when the original repository was closed. So I'll maintain with more flexible and robust structure with [MoT Labs](https://github.com/motlabs).
 
 This repository currently implemented the CPM and Hourglass model using TensorFlow. Instead of normal convolution, inverted residuals (also known as Mobilenet V2) module has been used inside the model for **real-time** inference.
 
