@@ -1,5 +1,5 @@
-# Pose Estimation for Mobile
-> This repository is forked from [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) when the original repository was closed. So I'll maintain with more flexible and robust structure with [MoT Labs](https://github.com/motlabs).
+# 💃 Pose Estimation for Mobile
+> This repository is forked from [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) when the original repository was closed. So I'll maintain with more flexible and robust structure.
 
 This repository currently implemented the CPM and Hourglass model using TensorFlow. Instead of normal convolution, inverted residuals (also known as Mobilenet V2) module has been used inside the model for **real-time** inference.
 
@@ -53,15 +53,13 @@ You can download the apk as below to test on your device.
 
 ## Training
 
-***
+### Dependencies
 
-### Dependencies:
+- Python3
+- TensorFlow >= 1.4
+- Mace
 
-* Python3
-* TensorFlow >= 1.4
-* Mace
-
-### Dataset:
+### Dataset
 
 Training dataset available through [google driver](https://drive.google.com/open?id=1zahjQWhuKIYWRRI2ZlHzn65Ug_jIiC4l).
 
@@ -116,30 +114,6 @@ pred_image_on_tensorboard: True
 
 The cfg not cover all the parameters of the model, there still have some parameters in the `network_mv2_cpm.py`.
 
-### Train by nvidia-docker
-
-Build the docker by the following command:
-
-```bash
-cd training/docker
-docker build -t single-pose .
-```
-or
-
-```
-docker pull edvardhua/single-pose
-```
-
-Then run the following command to train the model:
-
-```bash
-nvidia-docker run -it -d \
--v <dataset_path>:/data5 -v <training_code_path>/training:/workspace \
--p 6006:6006 -e LOG_PATH=/root/hdd/trained/mv2_cpm/log \
--e PARAMETERS_FILE=experiments/mv2_cpm.cfg edvardhua/single-pose
-```
-
-Also, it will create the tensorboard on port 6006. Beside, make sure you install the `nvidia-docker`.
 
 ### Train by ordinary way
 
@@ -164,6 +138,31 @@ python3 src/train.py experiments/mv2_cpm.cfg
 After 12 hour training, the model is almost coverage on 3 Nvidia 1080Ti graphics cards, below is the corresponding plot on tensorboard.
 
 ![image](images/loss_lastlayer_heat.png)
+
+### Train by nvidia-docker
+
+Build the docker by the following command:
+
+```bash
+cd training/docker
+docker build -t single-pose .
+```
+or
+
+```
+docker pull edvardhua/single-pose
+```
+
+Then run the following command to train the model:
+
+```bash
+nvidia-docker run -it -d \
+-v <dataset_path>:/data5 -v <training_code_path>/training:/workspace \
+-p 6006:6006 -e LOG_PATH=/root/hdd/trained/mv2_cpm/log \
+-e PARAMETERS_FILE=experiments/mv2_cpm.cfg edvardhua/single-pose
+```
+
+Also, it will create the tensorboard on port 6006. Beside, make sure you install the `nvidia-docker`.
 
 ### Bechmark (PCKh)
 
@@ -191,9 +190,9 @@ Hourglass
 * [TFlite](https://github.com/edvardHua/PoseEstimationForMobile/tree/master/release/hourglass_model)
 * [CoreML](https://github.com/edvardHua/PoseEstimationForMobile/tree/master/release/hourglass_model)
 
-## Android Demo
+## Related Mobile Projects
 
-***
+### Android Demo
 
 Thanks to mace framework, now you can using GPU to run this model on android smartphone.
 
@@ -209,7 +208,7 @@ Then follow the instruction of [mace-0.9 documentation](https://mace.readthedocs
 
 For how to invoke the model and parsing output, you can check the [android source code](android_demo) i provided.
 
-The benchmark of some socs for average inference time are shown as follow.
+#### Performance on various android devices
 
 Model | Snapdragon 845 | Snapdragon 660 | Hisilicon 960 | Exynos 7420
 ---- | --- | --- | --- | ---
@@ -244,9 +243,6 @@ docker exec -it mace-dev bash
 cd /demo_mace && ./gradlew build
 
 ```
-
-***
-
 
 Or you can transfer the model into tflite.
 
@@ -318,11 +314,11 @@ Then, place the tflite file in `android_demo/app/src/main/assets` and modify the
 
 Finally, import the project to `Android Studio` and run in you smartphone.
 
-## iOS Demo
+### iOS Demo
 
-***
+You can run the model on iOS device by using [PoseEstimation-CoreML](https://github.com/tucan9389/PoseEstimation-CoreML) repository, which is base-line project for pose estimation on iOS.
 
-Thanks to [tucan](https://github.com/tucan9389), now you can run model on iOS.
+#### Convert the TensorFlow model to Core ML model.
 
 First, convert model into CoreML model.
 
@@ -344,6 +340,8 @@ python3 src/gen_tflite_coreml.py \
 
 The benchmark of some socs for average inference time are shown as follow.
 
+#### Performance on various iOS devices
+
 Model           | iPhone XS Max | iPhone XS | iPhone X | iPhone 8 Plus | iPhone 8
 --------------- | ------------- | --------- | -------- | ------------- | --------
 CPM & Hourglass | 17 ms         | 16 ms     | 69 ms    | 64 ms         | 42 ms    
@@ -359,8 +357,6 @@ Then, follow the instruction on [PoseEstimation-CoreML](https://github.com/tucan
 
 ## Reference
 
-***
-
 [1] [Paper of Convolutional Pose Machines](https://arxiv.org/abs/1602.00134) <br/>
 [2] [Paper of Stack Hourglass](https://arxiv.org/abs/1603.06937) <br/>
 [3] [Paper of MobileNet V2](https://arxiv.org/pdf/1801.04381.pdf) <br/>
@@ -370,7 +366,5 @@ Then, follow the instruction on [PoseEstimation-CoreML](https://github.com/tucan
 [7] [Mace documentation](https://mace.readthedocs.io)
 
 ## License
-
-***
 
 [Apache License 2.0](LICENSE)
