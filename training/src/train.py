@@ -105,14 +105,19 @@ def main(argv=None):
     gpus = 'gpus'
     if platform.system() == 'Darwin':
         gpus = 'cpu'
-    training_name = '{}_batch-{}_lr-{}_{}-{}_{}x{}_{}'.format(
+
+    import datetime
+    current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+    training_name = '{}_batch-{}_lr-{}_{}-{}_{}x{}_{}-{}'.format(
         params['model'],
         params['batchsize'],
         params['lr'],
         gpus,
         params['gpus'],
         params['input_width'], params['input_height'],
-        config_file.replace("/", "-").replace(".cfg", "")
+        config_file.replace("/", "-").replace(".cfg", ""),
+        current_time
     )
 
     with tf.Graph().as_default(), tf.device("/cpu:0"):
@@ -182,11 +187,17 @@ def main(argv=None):
         tf.summary.scalar("loss_lastlayer_heat", last_heat_loss)
         summary_merge_op = tf.summary.merge_all()
 
+
+
+
+
+
+
         pred_result_image = tf.placeholder(tf.float32, shape=[params['batchsize'], 480, 640, 3])
         pred_result__summary = tf.summary.image("pred_result_image", pred_result_image, params['batchsize'])
 
         init = tf.global_variables_initializer()
-        config = tf.ConfigProto(allow_soft_placement = True)
+        config = tf.ConfigProto(allow_soft_placement=True)
         # occupy gpu gracefully
         config.gpu_options.allow_growth = True
         with tf.Session(config=config) as sess:
