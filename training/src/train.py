@@ -186,7 +186,7 @@ def main(argv=None):
         pred_result__summary = tf.summary.image("pred_result_image", pred_result_image, params['batchsize'])
 
         init = tf.global_variables_initializer()
-        config = tf.ConfigProto()
+        config = tf.ConfigProto(allow_soft_placement = True)
         # occupy gpu gracefully
         config.gpu_options.allow_growth = True
         with tf.Session(config=config) as sess:

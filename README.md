@@ -30,7 +30,7 @@ This repository currently implemented the CPM and Hourglass model using TensorFl
   </tr>
 </table>
 
-> You can modify the [architectures](https://github.com/edvardHua/PoseEstimationForMobile/tree/master/training/src) of network for training much higher PCKh model.
+> You can modify the [architectures](training/src) of network for training much higher PCKh model.
 
 The respository contains:
 
@@ -40,12 +40,12 @@ The respository contains:
 
 Below GIF is catch on Mi Mix2s (~60 FPS)
 
-![image](images/demo.gif)
+![image](resources/demo.gif)
 
 You can download the apk as below to test on your device.
 
 | Using Mace (Support GPU) | Using TFlite (Only CPU) |
-| --- | --- |
+| ---------------------------------------------------------- | ---------------------------------------------------------------- |
 | [PoseEstimation-Mace.apk](release/PoseEstimation-Mace.apk) | [PoseEstimation-TFlite.apk](release/PoseEstimation-TFlite.apk) |
 
 
@@ -90,26 +90,27 @@ Below is the content of [mv2_cpm.cfg](training/experiments/mv2_cpm.cfg).
 
 ```bash
 [Train]
+datapath: '../datasets/ai_challenger'
+imgpath: '../datasets/'
+checkpoint: '../trained/mv2_cpm_tiny/mv2_cpm_batch-16_lr-0.001_gpus-1_192x192_experiments-mv2_cpm'
+modelpath: '../trained/mv2_cpm_tiny/models'
+logpath: '../trained/mv2_cpm_tiny/log'
 model: 'mv2_cpm'
-checkpoint: False
-datapath: '/root/hdd/ai_challenger'
-imgpath: '/root/hdd/'
-visible_devices: '0, 1, 2'
-multiprocessing_num: 8
+visible_devices: '1'
+multiprocessing_num: 16
 max_epoch: 1000
 lr: '0.001'
-batchsize: 5
+batchsize: 16
 decay_rate: 0.95
 input_width: 192
 input_height: 192
 n_kpoints: 14
 scale: 2
-modelpath: '/root/hdd/trained/mv2_cpm/models'
-logpath: '/root/hdd/trained/mv2_cpm/log'
-num_train_samples: 20000
+identify_occlusion: False
+num_train_samples: 25000
 per_update_tensorboard_step: 500
 per_saved_model_step: 2000
-pred_image_on_tensorboard: True
+pred_image_on_tensorboard: False
 ```
 
 The cfg not cover all the parameters of the model, there still have some parameters in the `network_mv2_cpm.py`.
@@ -137,7 +138,7 @@ python3 src/train.py experiments/mv2_cpm.cfg
 
 After 12 hour training, the model is almost coverage on 3 Nvidia 1080Ti graphics cards, below is the corresponding plot on tensorboard.
 
-![image](images/loss_lastlayer_heat.png)
+![image](resources/loss_lastlayer_heat.png)
 
 ### Train by nvidia-docker
 
@@ -180,15 +181,15 @@ python3 src/benchmark.py --frozen_pb_path=hourglass/model-360000.pb \
 
 CPM
 
-* [Frozen graph](https://github.com/edvardHua/PoseEstimationForMobile/tree/master/release/cpm_model)
-* [TFlite](https://github.com/edvardHua/PoseEstimationForMobile/tree/master/release/cpm_model)
-* [CoreML](https://github.com/edvardHua/PoseEstimationForMobile/tree/master/release/cpm_model)
+* [Frozen graph](release/cpm_model)
+* [TFlite](release/cpm_model)
+* [CoreML](release/cpm_model)
 
 Hourglass
 
-* [Frozen graph](https://github.com/edvardHua/PoseEstimationForMobile/tree/master/release/hourglass_model)
-* [TFlite](https://github.com/edvardHua/PoseEstimationForMobile/tree/master/release/hourglass_model)
-* [CoreML](https://github.com/edvardHua/PoseEstimationForMobile/tree/master/release/hourglass_model)
+* [Frozen graph](release/hourglass_model)
+* [TFlite](release/hourglass_model)
+* [CoreML](release/hourglass_model)
 
 ## Related Mobile Projects
 

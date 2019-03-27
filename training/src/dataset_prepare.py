@@ -23,6 +23,8 @@ class CocoPose:
         global mplset
         mplset = True
         import matplotlib.pyplot as plt
+        import matplotlib
+        matplotlib.use('Agg')
 
         fig = plt.figure()
         if heatmap is not None:
