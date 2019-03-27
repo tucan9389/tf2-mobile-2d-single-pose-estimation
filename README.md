@@ -19,7 +19,7 @@ This repository currently implemented the CPM and Hourglass model using TensorFl
 	<td>93.78</td>
 	<td rowspan="2">
 	~60 FPS on Snapdragon 845 <br/>
-	30+ FPS on iPhone x (need more test)
+	~60 FPS on iPhone XS
 	</td>
   </tr>
 
@@ -56,7 +56,7 @@ You can download the apk as below to test on your device.
 ### Dependencies
 
 - Python3
-- TensorFlow >= 1.4
+- TensorFlow >= 1.8.0
 - Mace
 
 ### Dataset
@@ -117,7 +117,7 @@ The cfg not cover all the parameters of the model, there still have some paramet
 
 ### Train by ordinary way
 
-0. (mac only) Change tensorflow-gpu==1.4.0 to tensorflow==1.4.0 on requirements.txt.
+> (mac only) Remove tensorflow-gpu==1.8.0 on [requirements.txt](training/requirements.txt) first.
 
 1. install the dependencies.
 
