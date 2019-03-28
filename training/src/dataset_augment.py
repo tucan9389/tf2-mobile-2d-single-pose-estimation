@@ -10,11 +10,13 @@ import random
 import cv2
 import numpy as np
 from tensorpack.dataflow.imgaug.geometry import RotationAndCropValid
+import imgaug as ia
+from imgaug import augmenters as iaa
 from enum import Enum
 
-_network_w = 256
-_network_h = 256
-_scale = 2
+_network_w = 256    # change from .cfg file
+_network_h = 256    # change from .cfg file
+_scale = 2          # change from .cfg file
 
 
 class CocoPart(Enum):
@@ -84,6 +86,7 @@ def pose_rotation(meta):
     if img.ndim == 3 and ret.ndim == 2:
         ret = ret[:, :, np.newaxis]
     neww, newh = RotationAndCropValid.largest_rotated_rect(ret.shape[1], ret.shape[0], deg)
+    # iaa
     neww = min(neww, ret.shape[1])
     newh = min(newh, ret.shape[0])
     newx = int(center[0] - neww * 0.5)

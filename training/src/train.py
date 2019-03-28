@@ -106,8 +106,8 @@ def main(argv=None):
     if platform.system() == 'Darwin':
         gpus = 'cpu'
 
-    import datetime
-    current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+    current_time = datetime.now().strftime("%Y%m%d%H%M%S")
 
     training_name = '{}_batch-{}_lr-{}_{}-{}_{}x{}_{}-{}'.format(
         params['model'],

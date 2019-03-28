@@ -19,22 +19,43 @@ def display_image():
     display heatmap & origin image
     :return:
     """
-    from dataset_prepare import CocoMetadata, CocoPose
-    from pycocotools.coco import COCO
+    from dataset_prepare import CocoMetadata
+    from dataset_augment import pose_to_img
     from os.path import join
-    from dataset import _parse_function
+    from pycocotools.coco import COCO
+    from dataset_prepare import CocoPose
+    # import numpy as np
+    # from dataset import _parse_function
+    from dataset import _augment
 
-    BASE_PATH = "/root/hdd/ai_challenger"
+    BASE = "../datasets"
+    BASE_PATH = BASE + "/ai_challenger"
+    ANNOTATION_PATH = join(BASE_PATH, "ai_challenger_valid.json")
+    _network_w = 192
+    _network_h = 192
+    _scale = 4
 
     import os
     # os.chdir("..")
 
-    ANNO = COCO(
-        join(BASE_PATH, "ai_challenger_valid.json")
-    )
-    train_imgIds = ANNO.getImgIds()
 
-    img, heat = _parse_function(train_imgIds[100], ANNO)
+    imgId = 100
+
+    anno = COCO(
+        ANNOTATION_PATH
+    )
+    train_imgIds = anno.getImgIds()
+
+    img_meta = anno.loadImgs([imgId])[0]
+    anno_ids = anno.getAnnIds(imgIds=imgId)
+    img_anno = anno.loadAnns(anno_ids)
+    idx = img_meta['id']
+    img_path = join(BASE, img_meta['file_name'])
+
+    img_meta_data = CocoMetadata(idx, img_path, img_meta, img_anno, sigma=6.0)
+    img_meta_data = _augment(img_meta_data)
+    img, heat = pose_to_img(img_meta_data)
+
 
     CocoPose.display_image(img, heat, pred_heat=heat, as_numpy=False)
 
@@ -148,12 +169,15 @@ def run_with_frozen_pb(img_path, input_w_h, frozen_graph, output_node_names):
 
 if __name__ == '__main__':
     # saved_model_graph()
-    metric_prefix(256, 256)
+
+    # metric_prefix(256, 256)
+
     # run_with_frozen_pb(
     #     "/root/hdd/ai_challenger/train/0a9396675bf14580eb08c37e0b8a69a0299afb03.jpg",
     #     256,
     #     "./model-260000.pb",
     #     "Convolutional_Pose_Machine/stage_5_out"
     # )
-    # display_image()
+
+    display_image()
 
