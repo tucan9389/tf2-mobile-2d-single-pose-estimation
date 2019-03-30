@@ -1,0 +1,6 @@
+tensorflow==2.0.0-alpha0
+#tensorflow-gpu==2.0.0-alpha0
+msgpack
+pycocotools
+opencv-python
+tensorpack
