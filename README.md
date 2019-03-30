@@ -1,3 +1,9 @@
+### pose-estimation-for-mobile v1.0 Goal(Preparing...)
+- Train with your custom annotated dataset easily.<br>[tucan9389/KeypointAnnotation](https://github.com/tucan9389/KeypointAnnotation) is annotation tool ran on mobile device. You can annotate on subway!.
+- Support TF 2.0 and tf.keras API
+- Sperate android project
+- Refactoring
+
 # 💃 Pose Estimation for Mobile
 > ~~This repository is forked from [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) when the original repository was closed.~~ [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) repository is reopened! I'll maintain it separately.
 
