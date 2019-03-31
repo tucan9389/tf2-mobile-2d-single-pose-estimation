@@ -4,20 +4,23 @@
 
 This repository currently implemented the Hourglass model using TensorFlow 2.0 (and Keras API). Instead of normal convolution, inverted residuals (also known as Mobilenet V2) module has been used inside the model for **real-time** inference.
 
-# Table of contents
+## Table of contents
 
 - [Goals](#goals)
 - [Getting Started](#getting-started)
-- [Running The Project](#running-the-project)
-- [Template Details](#template-details)
-    - [Project Architecture](#project-architecture)
+- [Tuning](#tuning)
+- [Details](#details)
     - [Folder Structure](#folder-structure)
     - [Main Components](#main-components)
-- [Example Projects](#example-projects)
-- [Contributing](#contributing)
+- [TODO](#todo)
+- [Related Projects](#related-projects)
 - [Acknowledgements](#acknowledgements)
+- [Reference](#reference)
+- [Contributing](#contributing)
+- [License](#license)
 
-# Goals
+
+## Goals
 - Train with your custom annotated dataset easily.<br>
   : [tucan9389/KeypointAnnotation](https://github.com/tucan9389/KeypointAnnotation) is annotation tool ran on mobile device. You can annotate on subway!.
 - Support TF 2.0 and tf.keras API
@@ -25,136 +28,81 @@ This repository currently implemented the Hourglass model using TensorFlow 2.0 (
 - Refactoring<br>
   : Conform [the architecture for Keras project](https://github.com/Ahmkel/Keras-Project-Template)
 
-# Getting Started
-This template allows you to simply build and train deep learning models with checkpoints and tensorboard visualization.
+## Getting Started
+> *TODO: This project allows you to simply build and train the pose estimation models with hdf5 and tensorboard visualization.*
 
-In order to use the template you have to:
-1. Prepare the dataset and locate the dataset.
+### Install Anaconda (~10 min)
+
+[How To Install Anaconda on Ubuntu 18.04 [Quickstart]](https://www.digitalocean.com/community/tutorials/how-to-install-anaconda-on-ubuntu-18-04-quickstart)
+
+### Create Virtual Environment (~2 min)
+
+Create new environment.
+```shell
+conda create -n {env_name} python={python_version} anaconda
+# in my case
+# conda create -n pefm-env-tf2-alpha0 python=3.5 anaconda
+```
+
+Start the environment.
+```shell
+source activate {env_name}
+# in my case
+# source activate pefm-env-tf2-alpha0
+```
+
+### Install the requirements (~1 min)
+```shell
+cd {tf2-mobile-pose-estimation_path}
+pip install -r requirements.txt
+```
+
+## Run The Project
+
+In order to use the project you have to:
+1. Prepare the dataset([ai_challenger dataset](https://drive.google.com/open?id=1zahjQWhuKIYWRRI2ZlHzn65Ug_jIiC4l)) and locate the dataset on `./datasets`.
 2. Run the model using:
 ```shell
 python train.py
 ```
 
-# Running The Project
-A simple model for the ai challenger dataset is available.
-To run the project:
-1. Start the training using:
-```shell
-python train.py
-```
+## Tuning (Preparing...)
 
-# Details
+> With configuration file
 
-## Project Architecture(Preparing...)
+## Details
 
-<div align="center">
-<img align="center" width="520" src="https://github.com/Ahmkel/Keras-Project-Template/blob/master/figures/ProjectArchitecture.jpg?raw=true">
-</div>
-
-## Folder Structure(Preparing...)
+### Folder Structure
 
 ```
-├── train.py             - here's an example of main that is responsible for the whole pipeline.
-│
-│
-├── base                - this folder contains the abstract classes of the project components
-│   ├── base_data_loader.py   - this file contains the abstract class of the data loader.
-│   ├── base_model.py   - this file contains the abstract class of the model.
-│   └── base_train.py   - this file contains the abstract class of the trainer.
-│
-│
-├── model               - this folder contains the models of your project.
-│   └── simple_mnist_model.py
-│
-│
-├── trainer             - this folder contains the trainers of your project.
-│   └── simple_mnist_trainer.py
-│
-|
-├── data_loader         - this folder contains the data loaders of your project.
-│   └── simple_mnist_data_loader.py
-│
-│
-├── configs             - this folder contains the experiment and model configs of your project.
-│   └── simple_mnist_config.json
-│
-│
-├── datasets            - this folder might contain the datasets of your project.
-│
-│
-└── utils               - this folder contains any utils you need.
-     ├── config.py      - util functions for parsing the config files.
-     ├── dirs.py        - util functions for creating directories.
-     └── utils.py       - util functions for parsing arguments.
+├── train.py            - the main script file
+├── data_loader.py      -
+├── data_augment.py     -
+├── data_prepare.py     -
+├── hourglass_model.py  -
+├── model_config.py     -
+├── network_base.py     -
+├── path_manage.py      -
+├── train_config.py     -
+├── requirements.txt    -
+└── datasets            - this folder contain the datasets of the project.
+    └── ai_challenger
+        ├── ai_challenger_train.json
+        ├── ai_challenger_valid.json
+        ├── train
+        └── valid
 ```
 
+## TODO
 
-## Main Components(Preparing...)
+- Save model(`.h5`)
+- Convert the model(`.h5`) to TFLite model(`.tflit`)
+- Convert the model(`.h5`) to Core ML model(`.mlmodel`)
 
-### Models
-You need to:
-1. Create a model class that inherits from **BaseModel**.
-2. Override the ***build_model*** function which defines your model.
-3. Call ***build_model*** function from the constructor.
-
-
-### Trainers
-You need to:
-1. Create a trainer class that inherits from **BaseTrainer**.
-2. Override the ***train*** function which defines the training logic.
-
-**Note:** To add functionalities after each training epoch such as saving checkpoints or logs for tensorboard using Keras callbacks:
-1. Declare a callbacks array in your constructor.
-2. Define an ***init_callbacks*** function to populate your callbacks array and call it in your constructor.
-3. Pass the callbacks array to the ***fit*** function on the model object.
-
-**Note:** You can use ***fit_generator*** instead of ***fit*** to support generating new batches of data instead of loading the whole dataset at one time.
-
-### Data Loaders
-You need to:
-1. Create a data loader class that inherits from **BaseDataLoader**.
-2. Override the ***get_train_data()*** and the ***get_test_data()*** functions to return your train and test dataset splits.
-
-**Note:** You can also define a different logic where the data loader class has a function ***get_next_batch*** if you want the data reader to read batches from your dataset each time.
-
-### Configs
-You need to define a .json file that contains your experiment and model configurations such as the experiment name, the batch size, and the number of epochs.
-
-
-### Main
-Responsible for building the pipeline.
-1. Parse the config file
-2. Create an instance of your data loader class.
-3. Create an instance of your model class.
-4. Create an instance of your trainer class.
-5. Train your model using ".Train()" function on the trainer object.
-
-### From Config
-We can now load models without having to explicitly create an instance of each class. Look at:
-1. from_config.py: this can load any config file set up to point to the right modules/classes to import
-2. Look at configs/simple_mnist_from_config.json to get an idea of how this works from the config. Run it with:
-```shell
-python from_config.py -c configs/simple_mnist_from_config.json
-```
-3. See conv_mnist_from_config.json (and the additional data_loader/model) to see how easy it is to run a different experiment with just a different config file:
-```shell
-python from_config.py -c configs/conv_mnist_from_config.json
-```
-
-# Related Projects
-* [tucan9389/PoseEstimation-CoreML](https://github.com/tucan9389/PoseEstimation-CoreML)
-* [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile)
-* [dongseokYang/Body-Pose-Estimation-Android-gpu](https://github.com/dongseokYang/Body-Pose-Estimation-Android-gpu)
-
-
-# Contributing
-Any contributions are welcome including improving the project.
-
-# Acknowledgements
+## Acknowledgements
 This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile).
 
-
-# Reference
+## Reference
 
 [1] [Paper of Convolutional Pose Machines](https://arxiv.org/abs/1602.00134) <br/>
 [2] [Paper of Stack Hourglass](https://arxiv.org/abs/1603.06937) <br/>
@@ -163,6 +111,19 @@ This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/
 [5] [Repository of tf-pose-estimation](https://github.com/ildoonet/tf-pose-estimation) <br>
 [6] [Devlope guide of TensorFlow Lite](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/docs_src/mobile/tflite) <br/>
 [7] [Mace documentation](https://mace.readthedocs.io)
+
+### Related Projects
+- [tucan9389/PoseEstimation-CoreML](https://github.com/tucan9389/PoseEstimation-CoreML)
+- [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile)
+- [tucan9389/KeypointAnnotation](https://github.com/tucan9389/KeypointAnnotation)
+- [dongseokYang/Body-Pose-Estimation-Android-gpu](https://github.com/dongseokYang/Body-Pose-Estimation-Android-gpu)
+
+### Other Pose Estimation Projects
+
+- [cbsudux/awesome-human-pose-estimation](https://github.com/cbsudux/awesome-human-pose-estimation)
+
+## Contributing
+Any contributions are welcome including improving the project.
 
 # License
 

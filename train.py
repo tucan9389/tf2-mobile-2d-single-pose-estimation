@@ -19,8 +19,8 @@ import os
 import tensorflow as tf
 from tensorflow.keras import layers
 import numpy as np
-import time
 import sys
+from datetime import datetime
 
 import configparser
 
@@ -129,6 +129,13 @@ model.summary()
 model.compile(optimizer=tf.optimizers.Adam(0.001, epsilon=1e-8),#'adam',
               loss=tf.losses.MeanSquaredError(),
               metrics=['accuracy'])#tf.metrics.Accuracy
+
+current_time = datetime.now().strftime("%Y%m%d%H%M%S")
+model_path = 'outputs/hourglass-' + str(current_time)
+print(model_path)
+model.save(model_path)
+# model.save_weights(model_path)
+
 
 # ================================================
 # ==================== train! ====================
