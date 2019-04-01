@@ -56,6 +56,10 @@ In order to use the project you have to:
 ```shell
 python train.py
 ```
+3. Monitoring with TensorBoard:
+```shell
+tensorboard --logdir="./outputs/logs"
+```
 
 ## Tuning (Preparing...)
 
@@ -67,22 +71,22 @@ python train.py
 
 ```
 ├── train.py            - the main script file
-├── data_loader.py      -
-├── data_augment.py     -
-├── data_prepare.py     -
-├── hourglass_model.py  -
-├── model_config.py     -
-├── network_base.py     -
-├── path_manage.py      -
-├── train_config.py     -
-├── requirements.txt    -
+├── data_loader.py      
+├── data_augment.py     
+├── data_prepare.py     
+├── hourglass_model.py  
+├── model_config.py     
+├── network_base.py     
+├── path_manage.py      
+├── train_config.py     
+├── requirements.txt    
 ├── datasets            - this folder contain the datasets of the project.
 |   └── ai_challenger
 |       ├── ai_challenger_train.json
 |       ├── ai_challenger_valid.json
 |       ├── train
 |       └── valid
-└── outputs
+└── outputs             - this folder will be generated automatically when start training
     ├── models
     └── logs
 ```
@@ -97,9 +101,10 @@ python train.py
 
 ### TODO
 
-- Save model(`.h5` or `.ckpt`)
+- ~~Save model(`.h5` or `.ckpt`)~~
 - Convert the model(`.h5` or `.ckpt`) to TFLite model(`.tflite`)
 - Convert the model(`.h5` or `.ckpt`) to Core ML model(`.mlmodel`)
+- Make DEMO gif running on mobile device
 
 ## Acknowledgements
 This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile).

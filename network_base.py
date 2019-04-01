@@ -28,7 +28,7 @@ def max_pool(inputs, k_h, k_w, s_h, s_w, name, padding="same"):
 
 
 def upsample(inputs, factor, name):
-    return tf.image.resize(inputs, [int(inputs.get_shape()[1]) * factor, int(inputs.get_shape()[2]) * factor])
+    return layers.UpSampling2D(size=(factor, factor))(inputs)
 
 def separable_conv(input, c_o, k_s, stride, scope):
 
@@ -36,7 +36,7 @@ def separable_conv(input, c_o, k_s, stride, scope):
                                    kernel_size=[k_s, k_s],
                                    strides=stride,
                                    padding='same',
-                                   activation=activations.relu(max_value=6),
+                                   activation='relu',
                                    depthwise_initializer='glorot_normal',
                                    pointwise_initializer='glorot_normal',
                                    bias_initializer=None,
@@ -45,10 +45,10 @@ def separable_conv(input, c_o, k_s, stride, scope):
 
     tower = layers.Conv2D(c_o,
                           kernel_size=[1, 1],
-                          activation=activations.relu(max_value=6),
+                          activation='relu',
                           kernel_initializer='glorot_normal')(tower)
-    tower = layers.BatchNormalization()(tower)
-    output = activations.relu(max_value=6)(tower)
+    output = layers.BatchNormalization()(tower)
+    #output = activations.relu(max_value=6)(tower)
 
     return output
 
@@ -60,9 +60,10 @@ def inverted_bottleneck(inputs, up_channel_rate, channels, subsample, k_s=3, sco
 
     tower = layers.Conv2D(up_channel_rate * inputs.get_shape().as_list()[-1],
                             kernel_size=[1, 1],
-                            kernel_initializer='glorot_normal')(inputs)
+                            kernel_initializer='glorot_normal',
+                            activation='relu')(inputs)
     tower = layers.BatchNormalization()(tower)
-    tower = activations.relu(tower, max_value=6)
+    # tower = activations.relu(tower, max_value=6)
 
 
     tower = layers.SeparableConv2D(filters=1,
@@ -78,10 +79,11 @@ def inverted_bottleneck(inputs, up_channel_rate, channels, subsample, k_s=3, sco
 
 
     tower = layers.Conv2D(channels,
-                            kernel_size=[1, 1],
-                            kernel_initializer='glorot_normal')(tower)
-    tower = layers.BatchNormalization()(tower)
-    output = activations.relu(tower, max_value=6)
+                          kernel_size=[1, 1],
+                          kernel_initializer='glorot_normal',
+                          activation='relu')(tower)
+    output = layers.BatchNormalization()(tower)
+    # output = activations.relu(tower, max_value=6)
 
 
     if inputs.get_shape().as_list()[-1] == channels:
@@ -95,10 +97,10 @@ def convb(input, k_h, k_w, c_o, stride, name, relu=True):
     tower = layers.Conv2D(c_o,
                           kernel_size=[k_h, k_w],
                           strides=(stride, stride),
-                          activation=activations.relu if relu else None,
+                          activation='relu' if relu else None,
                           kernel_initializer='glorot_normal',
                           kernel_regularizer=regularizers.l2(0.00004))(input)
-    tower = layers.BatchNormalization()(tower)
-    output = activations.relu(tower, max_value=6)
+    output = layers.BatchNormalization()(tower)
+    # output = activations.relu(tower, max_value=6)
 
     return output

@@ -21,18 +21,19 @@
 
 from os import getcwd
 from os import chdir
+import os
 
 # move to project home directory
 chdir('..')
 
-PROJ_HOME               = getcwd() + "/pose-estimation-for-mobile-keras"
+PROJ_HOME               = os.path.join(getcwd(), "tf2-mobile-pose-estimation")#"tf2-mobile-pose-estimation")
 TF_MODULE_DIR           = PROJ_HOME              #+ '/tfmodules'
 
 print("[pathmanager] PROJ HOME = %s" % PROJ_HOME)
 
 
 # tf module related directory
-EXPORT_DIR              = PROJ_HOME          + '/export'
+EXPORT_DIR                = os.path.join(PROJ_HOME, 'export')
 # EXPORT_DIR                = 'gs://tf-tiny-pose-est'
 COCO_DATALOAD_DIR         = TF_MODULE_DIR          #+ '/coco_dataload_modules'
 
