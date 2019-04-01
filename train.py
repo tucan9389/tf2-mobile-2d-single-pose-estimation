@@ -93,8 +93,8 @@ def main():
     dataset_train   = dataloader_train.input_fn()
     #dataset_valid   = dataloader_valid.input_fn()
 
-    #data = dataset_train.repeat()
-    data = dataset_train
+    data = dataset_train.repeat()
+    # data = dataset_train
 
 
     # ================================================
@@ -117,8 +117,10 @@ def main():
     current_time = datetime.now().strftime("%Y%m%d%H%M%S")
     output_path = os.path.join(PROJ_HOME, "outputs")
 
-
-    checkpoint_path = os.path.join(output_path, "models", "hg_" + current_time + ".hdf5") #".ckpt"
+    model_path = os.path.join(output_path, "models")
+    if not os.path.exists(model_path):
+        os.mkdir(model_path)
+    checkpoint_path = os.path.join(model_path, "hg_" + current_time + ".hdf5") #".ckpt"
     check_pointer = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
                                                        save_weights_only=False,
                                                        verbose=1)
@@ -132,7 +134,7 @@ def main():
     # ==================== train! ====================
     # ================================================
 
-    model.fit(data, epochs=300, steps_per_epoch=100, callbacks=[check_pointer, tensorboard])
+    model.fit(data, epochs=300,steps_per_epoch=100, callbacks=[check_pointer, tensorboard]) # steps_per_epoch=100,
 
     # ================================================
     # =================== evaluate ===================

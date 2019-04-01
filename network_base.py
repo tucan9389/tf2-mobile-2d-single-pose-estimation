@@ -36,19 +36,20 @@ def separable_conv(input, c_o, k_s, stride, scope):
                                    kernel_size=[k_s, k_s],
                                    strides=stride,
                                    padding='same',
-                                   activation='relu',
+                                   activation=None,
                                    depthwise_initializer='glorot_normal',
                                    pointwise_initializer='glorot_normal',
                                    bias_initializer=None,
                                    depthwise_regularizer=regularizers.l2(0.00004),
                                    pointwise_regularizer=regularizers.l2(0.00004))(input)
+    tower = layers.ReLU(max_value=6)(tower)
 
     tower = layers.Conv2D(c_o,
                           kernel_size=[1, 1],
-                          activation='relu',
+                          activation=None,
                           kernel_initializer='glorot_normal')(tower)
-    output = layers.BatchNormalization()(tower)
-    #output = activations.relu(max_value=6)(tower)
+    tower = layers.BatchNormalization()(tower)
+    output = layers.ReLU(max_value=6)(tower)
 
     return output
 
@@ -61,9 +62,9 @@ def inverted_bottleneck(inputs, up_channel_rate, channels, subsample, k_s=3, sco
     tower = layers.Conv2D(up_channel_rate * inputs.get_shape().as_list()[-1],
                             kernel_size=[1, 1],
                             kernel_initializer='glorot_normal',
-                            activation='relu')(inputs)
+                            activation=None)(inputs)
     tower = layers.BatchNormalization()(tower)
-    # tower = activations.relu(tower, max_value=6)
+    tower = layers.ReLU(max_value=6)(tower)
 
 
     tower = layers.SeparableConv2D(filters=1,
@@ -82,8 +83,8 @@ def inverted_bottleneck(inputs, up_channel_rate, channels, subsample, k_s=3, sco
                           kernel_size=[1, 1],
                           kernel_initializer='glorot_normal',
                           activation='relu')(tower)
-    output = layers.BatchNormalization()(tower)
-    # output = activations.relu(tower, max_value=6)
+    tower = layers.BatchNormalization()(tower)
+    output = layers.ReLU(max_value=6)(tower)
 
 
     if inputs.get_shape().as_list()[-1] == channels:
@@ -97,10 +98,12 @@ def convb(input, k_h, k_w, c_o, stride, name, relu=True):
     tower = layers.Conv2D(c_o,
                           kernel_size=[k_h, k_w],
                           strides=(stride, stride),
-                          activation='relu' if relu else None,
+                          activation=None,
                           kernel_initializer='glorot_normal',
                           kernel_regularizer=regularizers.l2(0.00004))(input)
-    output = layers.BatchNormalization()(tower)
-    # output = activations.relu(tower, max_value=6)
+    if relu:
+        tower = layers.ReLU()(tower)
+    tower = layers.BatchNormalization()(tower)
+    output = layers.ReLU(max_value=6)(tower)
 
     return output

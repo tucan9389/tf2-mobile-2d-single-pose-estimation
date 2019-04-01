@@ -101,9 +101,9 @@ tensorboard --logdir="./outputs/logs"
 
 ### TODO
 
-- ~~Save model(`.h5` or `.ckpt`)~~
-- Convert the model(`.h5` or `.ckpt`) to TFLite model(`.tflite`)
-- Convert the model(`.h5` or `.ckpt`) to Core ML model(`.mlmodel`)
+- ~~Save model(`.hdf5` or `.ckpt`)~~
+- Convert the model(`.hdf5` or `.ckpt`) to TFLite model(`.tflite`)
+- Convert the model(`.hdf5` or `.ckpt`) to Core ML model(`.mlmodel`)
 - Make DEMO gif running on mobile device
 
 ## Acknowledgements
