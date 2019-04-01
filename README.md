@@ -6,27 +6,18 @@ This repository currently implemented the Hourglass model using TensorFlow 2.0 (
 
 ## Table of contents
 
-- [Goals](#goals)
 - [Getting Started](#getting-started)
 - [Tuning](#tuning)
 - [Details](#details)
     - [Folder Structure](#folder-structure)
     - [Main Components](#main-components)
-- [TODO](#todo)
+- [Goals](#goals)
+    - [TODO](#todo)
 - [Related Projects](#related-projects)
 - [Acknowledgements](#acknowledgements)
 - [Reference](#reference)
 - [Contributing](#contributing)
 - [License](#license)
-
-
-## Goals
-- Train with your custom annotated dataset easily.<br>
-  : [tucan9389/KeypointAnnotation](https://github.com/tucan9389/KeypointAnnotation) is annotation tool ran on mobile device. You can annotate on subway!.
-- Support TF 2.0 and tf.keras API
-- Sperate android project
-- Refactoring<br>
-  : Conform [the architecture for Keras project](https://github.com/Ahmkel/Keras-Project-Template)
 
 ## Getting Started
 > *TODO: This project allows you to simply build and train the pose estimation models with hdf5 and tensorboard visualization.*
@@ -85,19 +76,30 @@ python train.py
 ├── path_manage.py      -
 ├── train_config.py     -
 ├── requirements.txt    -
-└── datasets            - this folder contain the datasets of the project.
-    └── ai_challenger
-        ├── ai_challenger_train.json
-        ├── ai_challenger_valid.json
-        ├── train
-        └── valid
+├── datasets            - this folder contain the datasets of the project.
+|   └── ai_challenger
+|       ├── ai_challenger_train.json
+|       ├── ai_challenger_valid.json
+|       ├── train
+|       └── valid
+└── outputs
+    ├── models
+    └── logs
 ```
 
-## TODO
+## Goals
+- Train with your custom annotated dataset easily.<br>
+  : [tucan9389/KeypointAnnotation](https://github.com/tucan9389/KeypointAnnotation) is annotation tool ran on mobile device. You can annotate on subway!.
+- Support TF 2.0 and tf.keras API
+- Sperate android project
+- Refactoring<br>
+  : Conform [the architecture for Keras project](https://github.com/Ahmkel/Keras-Project-Template)
 
-- Save model(`.h5`)
-- Convert the model(`.h5`) to TFLite model(`.tflit`)
-- Convert the model(`.h5`) to Core ML model(`.mlmodel`)
+### TODO
+
+- Save model(`.h5` or `.ckpt`)
+- Convert the model(`.h5` or `.ckpt`) to TFLite model(`.tflite`)
+- Convert the model(`.h5` or `.ckpt`) to Core ML model(`.mlmodel`)
 
 ## Acknowledgements
 This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile).

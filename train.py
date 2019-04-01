@@ -131,17 +131,31 @@ model.compile(optimizer=tf.optimizers.Adam(0.001, epsilon=1e-8),#'adam',
               metrics=['accuracy'])#tf.metrics.Accuracy
 
 current_time = datetime.now().strftime("%Y%m%d%H%M%S")
-model_path = 'outputs/hourglass-' + str(current_time)
-print(model_path)
-model.save(model_path)
+# model_path = 'hourglass' + ".h5"
+# print(model_path)
+# model.save(model_path)
 # model.save_weights(model_path)
+
+# checkpoint_path = "./outputs/hourglass-" + current_time + ".hdf5"#"".ckpt"
+# checkpoint_dir = os.path.dirname(checkpoint_path)
+# cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
+#                                                  save_weights_only=True,
+#                                                  verbose=1)
+
+output_path = "outputs/"
+save_path = output_path + "models/" + 'weights.{epoch:02d}-{val_loss:.2f}.hdf5'
+check_pointer = tf.keras.callbacks.ModelCheckpoint(save_path, save_best_only=True, verbose=1)
+
+log_path = output_path + "logs/" + "hourglass-" + current_time
+tensorboard = tf.keras.callbacks.TensorBoard(log_path)
+
 
 
 # ================================================
 # ==================== train! ====================
 # ================================================
 
-model.fit(data, epochs=5)
+model.fit(data, epochs=5, callbacks=[check_pointer, tensorboard])
 
 # ================================================
 # =================== evaluate ===================
