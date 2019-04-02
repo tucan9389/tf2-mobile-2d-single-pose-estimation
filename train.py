@@ -91,7 +91,7 @@ def main():
 
 
     dataset_train   = dataloader_train.input_fn()
-    #dataset_valid   = dataloader_valid.input_fn()
+    # dataset_valid   = dataloader_valid.input_fn()
 
     data = dataset_train.repeat()
     # data = dataset_train
@@ -107,16 +107,17 @@ def main():
     model = model_builder.model
     model.summary()
 
-
-
     model.compile(optimizer=tf.optimizers.Adam(0.001, epsilon=1e-8),#'adam',
                   loss=tf.losses.MeanSquaredError(),
                   metrics=['accuracy'])#tf.metrics.Accuracy
 
-
+    # ================================================
+    # =============== setup output ===================
+    # ================================================
     current_time = datetime.now().strftime("%Y%m%d%H%M%S")
     output_path = os.path.join(PROJ_HOME, "outputs")
 
+    # output model file(.hdf5)
     model_path = os.path.join(output_path, "models")
     if not os.path.exists(model_path):
         os.mkdir(model_path)
@@ -124,7 +125,7 @@ def main():
     check_pointer = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
                                                        save_weights_only=False,
                                                        verbose=1)
-
+    # output tensorboard log
     log_path = os.path.join(output_path, "logs")
     log_path = os.path.join(log_path, "hg_" + current_time)
     tensorboard = tf.keras.callbacks.TensorBoard(log_path)
@@ -134,7 +135,10 @@ def main():
     # ==================== train! ====================
     # ================================================
 
-    model.fit(data, epochs=300,steps_per_epoch=100, callbacks=[check_pointer, tensorboard]) # steps_per_epoch=100,
+    model.fit(data,
+              epochs=300,
+              steps_per_epoch=100,
+              callbacks=[check_pointer, tensorboard]) # steps_per_epoch=100,
 
     # ================================================
     # =================== evaluate ===================

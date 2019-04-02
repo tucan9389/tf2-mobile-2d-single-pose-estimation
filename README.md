@@ -6,21 +6,25 @@ This repository currently implemented the Hourglass model using TensorFlow 2.0 (
 
 ## Table of contents
 
+- [Goals](#goals)
 - [Getting Started](#getting-started)
 - [Tuning](#tuning)
 - [Details](#details)
     - [Folder Structure](#folder-structure)
     - [Main Components](#main-components)
-- [Goals](#goals)
-    - [TODO](#todo)
+- [TODO](#todo)
 - [Related Projects](#related-projects)
 - [Acknowledgements](#acknowledgements)
 - [Reference](#reference)
 - [Contributing](#contributing)
 - [License](#license)
 
+## Goals
+
+- 📚 Easy to train with any machine (`Linux`, `macOC`, `Windows`)
+- 🏃‍ Easy to use the model on mobile device (`iOS`, `Android`)
+
 ## Getting Started
-> *TODO: This project allows you to simply build and train the pose estimation models with hdf5 and tensorboard visualization.*
 
 ### Install Anaconda (~10 min)
 
@@ -91,20 +95,19 @@ tensorboard --logdir="./outputs/logs"
     └── logs
 ```
 
-## Goals
+## TODO
+
+- ~~Save model(`.hdf5` or `.ckpt`)~~
+- Convert the model(`.hdf5` or `.ckpt`) to TFLite model(`.tflite`)
+- Convert the model(`.hdf5` or `.ckpt`) to Core ML model(`.mlmodel`)
+- Make DEMO gif running on mobile device
+
 - Train with your custom annotated dataset easily.<br>
   : [tucan9389/KeypointAnnotation](https://github.com/tucan9389/KeypointAnnotation) is annotation tool ran on mobile device. You can annotate on subway!.
 - Support TF 2.0 and tf.keras API
 - Sperate android project
 - Refactoring<br>
   : Conform [the architecture for Keras project](https://github.com/Ahmkel/Keras-Project-Template)
-
-### TODO
-
-- ~~Save model(`.hdf5` or `.ckpt`)~~
-- Convert the model(`.hdf5` or `.ckpt`) to TFLite model(`.tflite`)
-- Convert the model(`.hdf5` or `.ckpt`) to Core ML model(`.mlmodel`)
-- Make DEMO gif running on mobile device
 
 ## Acknowledgements
 This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile).
