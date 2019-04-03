@@ -36,14 +36,14 @@ Create new environment.
 ```shell
 conda create -n {env_name} python={python_version} anaconda
 # in my case
-# conda create -n pefm-env-tf2-alpha0 python=3.5 anaconda
+# conda create -n mpe-env-tf2-alpha0 python=3.7 anaconda
 ```
 
 Start the environment.
 ```shell
 source activate {env_name}
 # in my case
-# source activate pefm-env-tf2-alpha0
+# source activate mpe-env-tf2-alpha0
 ```
 
 ### Install the requirements (~1 min)
@@ -64,6 +64,12 @@ python train.py
 ```shell
 tensorboard --logdir="./outputs/logs"
 ```
+
+## Results
+
+| 19.04.02 | 19.04.02 | 19.04.02 |
+| :------: | :------: | :------: |
+| ![tensorboard-1-190403](resources/tensorboard-1-190403.png) | ![tensorboard-2-190403](resources/tensorboard-2-190403.png) | ![tensorboard-3-190403](resources/tensorboard-3-190403.png) |
 
 ## Tuning (Preparing...)
 
@@ -100,17 +106,12 @@ tensorboard --logdir="./outputs/logs"
 - ~~Save model(`.hdf5` or `.ckpt`)~~
 - Convert the model(`.hdf5` or `.ckpt`) to TFLite model(`.tflite`)
 - Convert the model(`.hdf5` or `.ckpt`) to Core ML model(`.mlmodel`)
+- Run the model on Android
+- Run the model on iOS
 - Make DEMO gif running on mobile device
 
-- Train with your custom annotated dataset easily.<br>
-  : [tucan9389/KeypointAnnotation](https://github.com/tucan9389/KeypointAnnotation) is annotation tool ran on mobile device. You can annotate on subway!.
-- Support TF 2.0 and tf.keras API
-- Sperate android project
-- Refactoring<br>
-  : Conform [the architecture for Keras project](https://github.com/Ahmkel/Keras-Project-Template)
-
 ## Acknowledgements
-This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile).
+This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) and [jwkanggist/tf-tiny-pose-estimation](https://github.com/jwkanggist/tf-tiny-pose-estimation).
 
 ## Reference
 
@@ -124,8 +125,9 @@ This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/
 
 ### Related Projects
 - [tucan9389/PoseEstimation-CoreML](https://github.com/tucan9389/PoseEstimation-CoreML)
-- [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile)
 - [tucan9389/KeypointAnnotation](https://github.com/tucan9389/KeypointAnnotation)
+- [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile)
+- [jwkanggist/tf-tiny-pose-estimation](https://github.com/jwkanggist/tf-tiny-pose-estimatio)
 - [dongseokYang/Body-Pose-Estimation-Android-gpu](https://github.com/dongseokYang/Body-Pose-Estimation-Android-gpu)
 
 ### Other Pose Estimation Projects
