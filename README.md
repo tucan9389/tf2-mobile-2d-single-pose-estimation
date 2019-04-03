@@ -21,8 +21,8 @@ This repository currently implemented the Hourglass model using TensorFlow 2.0 (
 
 ## Goals
 
-- 📚 Easy to train with any machine (`Linux`, `macOC`, `Windows`)
-- 🏃‍ Easy to use the model on mobile device (`iOS`, `Android`)
+- 📚 Easy to train
+- 🏃‍ Easy to use the model on mobile device
 
 ## Getting Started
 
