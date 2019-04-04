@@ -67,9 +67,11 @@ tensorboard --logdir="./outputs/logs"
 
 ## Results
 
-| 19.04.02 | 19.04.02 | 19.04.02 |
-| :------: | :------: | :------: |
-| ![tensorboard-1-190403](resources/tensorboard-1-190403.png) | ![tensorboard-2-190403](resources/tensorboard-2-190403.png) | ![tensorboard-3-190403](resources/tensorboard-3-190403.png) |
+### Loss
+![tensorboard-1-190403](resources/tensorboard_loss-190404.png)
+
+### Accuracy
+![tensorboard-1-190403](resources/tensorboard_accuracy-190404.png)
 
 ## Tuning (Preparing...)
 
