@@ -77,6 +77,8 @@ tensorboard --logdir="./outputs/logs"
 
 ## Converting To Mobile Model
 
+### TensorFLow Lite
+
 1. Prepare the trained model(`.hdf5`) from section below [Run The Project](#run-the-project)
 2. Modify `trained_model_file_name` variable in `convert_to_tflite.py` to your own trained model.
 ```python
@@ -88,10 +90,9 @@ python convert_to_tflite.py
 ```
 4. And then, you can find the `.tflite` model on `{PROJECT_PATH}/outputs/models/tflite/{model_file_name}.tflite`.
 
-## Tuning (Preparing...)
+### Core ML (Preparing...)
 
-> With configuration file
-> This section will be separated to other `.md` file.
+> Related issue: [https://github.com/tucan9389/tf2-mobile-pose-estimation/issues/13](https://github.com/tucan9389/tf2-mobile-pose-estimation/issues/13)
 
 ## Details
 
