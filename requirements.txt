@@ -1,6 +1,9 @@
+#tf-nightly-2.0-preview
 tensorflow==2.0.0-alpha0
 #tensorflow-gpu==2.0.0-alpha0
 msgpack
 pycocotools
 opencv-python
 tensorpack
+six==1.10.0
+coremltools

@@ -8,6 +8,8 @@ This repository currently implemented the Hourglass model using TensorFlow 2.0 (
 
 - [Goals](#goals)
 - [Getting Started](#getting-started)
+- [Results](#results)
+- [Converting To Mobile Model](#converting-to-mobile-model)
 - [Tuning](#tuning)
 - [Details](#details)
     - [Folder Structure](#folder-structure)
@@ -73,11 +75,27 @@ tensorboard --logdir="./outputs/logs"
 ### Accuracy
 ![tensorboard-1-190403](resources/tensorboard_accuracy-190404.png)
 
+## Converting To Mobile Model
+
+1. Prepare the trained model(`.hdf5`) from section below [Run The Project](#run-the-project)
+2. Modify `trained_model_file_name` variable in `convert_to_tflite.py` to your own trained model.
+```python
+trained_model_file_name = "{model_file_name}.hdf5"
+```
+3. Run the `convert_to_tflite.py`:
+```shell
+python convert_to_tflite.py
+```
+4. And then, you can find the `.tflite` model on `{PROJECT_PATH}/outputs/models/tflite/{model_file_name}.tflite`.
+
 ## Tuning (Preparing...)
 
 > With configuration file
+> This section will be separated to other `.md` file.
 
 ## Details
+
+> This section will be separated to other `.md` file.
 
 ### Folder Structure
 
@@ -106,7 +124,7 @@ tensorboard --logdir="./outputs/logs"
 ## TODO
 
 - ~~Save model(`.hdf5` or `.ckpt`)~~
-- Convert the model(`.hdf5` or `.ckpt`) to TFLite model(`.tflite`)
+- ~~Convert the model(`.hdf5` or `.ckpt`) to TFLite model(`.tflite`)~~
 - Convert the model(`.hdf5` or `.ckpt`) to Core ML model(`.mlmodel`)
 - Run the model on Android
 - Run the model on iOS
@@ -137,6 +155,8 @@ This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/
 - [cbsudux/awesome-human-pose-estimation](https://github.com/cbsudux/awesome-human-pose-estimation)
 
 ## Contributing
+> This section will be separated to other `.md` file.
+
 Any contributions are welcome including improving the project.
 
 # License
