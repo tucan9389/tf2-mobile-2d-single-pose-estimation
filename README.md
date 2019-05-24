@@ -30,7 +30,8 @@ This repository currently implemented the Hourglass model using TensorFlow 2.0 (
 
 ### Install Anaconda (~10 min)
 
-[How To Install Anaconda on Ubuntu 18.04 [Quickstart]](https://www.digitalocean.com/community/tutorials/how-to-install-anaconda-on-ubuntu-18-04-quickstart)
+- [How To Install Anaconda on Ubuntu 18.04 [Quickstart]](https://www.digitalocean.com/community/tutorials/how-to-install-anaconda-on-ubuntu-18-04-quickstart)
+- [How to Install Anaconda on CentOS 7](https://linuxize.com/post/how-to-install-anaconda-on-centos-7/)
 
 ### Create Virtual Environment (~2 min)
 
