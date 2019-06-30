@@ -17,29 +17,34 @@ from __future__ import absolute_import, division, print_function
 import os
 
 import tensorflow as tf
+#from keras import layers
 from tensorflow.keras import layers
+#import keras
 import numpy as np
 import sys
 from os import getcwd
 from datetime import datetime
 
-from path_manager import PROJ_HOME
+from config.path_manager import PROJ_HOME
 
 import configparser
 
-from path_manager import TF_MODULE_DIR
-from path_manager import EXPORT_DIR
-from path_manager import COCO_DATALOAD_DIR
-from path_manager import DATASET_DIR
+from config.path_manager import TF_MODULE_DIR
+from config.path_manager import EXPORT_DIR
+from config.path_manager import COCO_DATALOAD_DIR
+from config.path_manager import DATASET_DIR
 
+from config.model_config import ModelConfig
+from config.train_config import PreprocessingConfig
+from config.train_config import TrainConfig
 
-from model_config import ModelConfig
-from train_config import PreprocessingConfig
-from train_config import TrainConfig
-
-from data_loader   import DataLoader
+from data_loader.data_loader import DataLoader
 
 from hourglass_model import HourglassModelBuilder
+
+from callbacks_model import get_check_pointer_callback
+from callbacks_model import get_tensorboard_callback
+from callbacks_model import get_img_tensorboard_callback
 
 
 print("tensorflow version   :", tf.__version__)
@@ -80,20 +85,24 @@ def main():
 
     # dataloader instance gen
     dataloader_train, dataloader_valid = \
-    [DataLoader(
-    is_training     =is_training,
-    data_dir        =DATASET_DIR,
-    transpose_input =False,
-    train_config    =train_config,
-    model_config    =model_config,
-    preproc_config  =preproc_config,
-    use_bfloat16    =False) for is_training in [True, False]]
+        [DataLoader(
+            is_training     =is_training,
+            data_dir        =DATASET_DIR,
+            transpose_input =False,
+            train_config    =train_config,
+            model_config    =model_config,
+            preproc_config  =preproc_config,
+            use_bfloat16    =False) for is_training in [True, False]]
 
 
     dataset_train   = dataloader_train.input_fn()
     # dataset_valid   = dataloader_valid.input_fn()
 
     data = dataset_train.repeat()
+    # iterator = data.make_one_shot_iterator()
+    # inputs, targets = iterator.get_next()
+    # print(inputs)
+    # print(targets)
     # data = dataset_train
 
 
@@ -103,49 +112,88 @@ def main():
 
     model_builder = HourglassModelBuilder()
     model_builder.build_model()
+    #model_builder.build_model(inputs=inputs)
 
     model = model_builder.model
     model.summary()
 
-    model.compile(optimizer=tf.optimizers.Adam(0.001, epsilon=1e-8),#'adam',
-                  loss=tf.losses.MeanSquaredError(),
-                  metrics=['accuracy'])#tf.metrics.Accuracy
+    model.compile(optimizer=tf.keras.optimizers.Adam(0.001, epsilon=1e-8),#'adam',
+                  loss=tf.keras.losses.mean_squared_error)#,
+                  #metrics=['mse'])
+                  #target_tensors=[targets])#tf.metrics.Accuracy
 
     # ================================================
     # =============== setup output ===================
     # ================================================
-    current_time = datetime.now().strftime("%Y%m%d%H%M%S")
-    output_path = os.path.join(PROJ_HOME, "outputs")
 
-    # output model file(.hdf5)
+    current_time = datetime.now().strftime("%m%d%H%M")
+    output_path = os.path.join(PROJ_HOME, "outputs")
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+
+    output_model_name = "_hg"  # hourglass
+    output_base_model_name = "_{}".format(model_config.base_model_name)
+    output_learning_rate = "_lr{}".format(train_config.learning_rate)
+    # output_decoder_filters = "_{}".format(model_config.filter_name)
+
+    output_name = current_time + output_model_name + output_learning_rate# + output_decoder_filters
+
     model_path = os.path.join(output_path, "models")
     if not os.path.exists(model_path):
         os.mkdir(model_path)
-    checkpoint_path = os.path.join(model_path, "hg_" + current_time + ".hdf5") #".ckpt"
-    check_pointer = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
-                                                       save_weights_only=False,
-                                                       verbose=1)
-    # output tensorboard log
+
     log_path = os.path.join(output_path, "logs")
-    log_path = os.path.join(log_path, "hg_" + current_time)
-    tensorboard = tf.keras.callbacks.TensorBoard(log_path)
+    if not os.path.exists(log_path):
+        os.mkdir(log_path)
+
+    print("\n")
+    print("model path:", model_path)
+    print("log path  :", log_path)
+    print("model name:", output_name)
+    print("\n")
+
+    batch_size = 6
+    images, labels = dataloader_valid.get_images(22, batch_size)
+
+    # --------------------------------------------------------------------------------------------------------------------
+    # output model file(.hdf5)
+    check_pointer_callback = get_check_pointer_callback(model_path=model_path, output_name=output_name)
+
+    # output tensorboard log
+    tensorboard_callback = get_tensorboard_callback(log_path=log_path, output_name=output_name)
+
+    # tensorboard image
+    img_tensorboard_callback = get_img_tensorboard_callback(log_path=log_path, output_name=output_name, images=images,
+                                                            labels=labels, model=model)
+    # --------------------------------------------------------------------------------------------------------------------
 
 
     # ================================================
     # ==================== train! ====================
     # ================================================
 
-    model.fit(data,
-              epochs=300,
-              steps_per_epoch=100,
-              callbacks=[check_pointer, tensorboard]) # steps_per_epoch=100,
+    # model.fit(data,
+    #           epochs=100,
+    #           steps_per_epoch=100,
+    #           callbacks=[check_pointer, tensorboard])
+    
+    model.fit(data,  # dataset_train_one_shot_iterator
+              epochs=train_config.epochs,
+              steps_per_epoch=train_config.steps_per_epoch,
+              # validation_steps=32,
+              # validation_data=dataset_valid,
+              callbacks=[
+                  check_pointer_callback,
+                  tensorboard_callback,
+                  img_tensorboard_callback])
 
     # ================================================
     # =================== evaluate ===================
     # ================================================
 
-
-
+    #
+    # TODO
+    #
 
 
 if __name__ =='__main__':

@@ -5,6 +5,7 @@
 # @Software: PyCharm
 
 import tensorflow as tf
+# from keras import layers, regularizers, activations
 from tensorflow.keras import layers, regularizers, activations
 # import tensorflow.contrib.slim as slim
 
@@ -39,7 +40,7 @@ def separable_conv(input, c_o, k_s, stride, scope):
                                    activation=None,
                                    depthwise_initializer='glorot_normal',
                                    pointwise_initializer='glorot_normal',
-                                   bias_initializer=None,
+                                   bias_initializer='zeros',
                                    depthwise_regularizer=regularizers.l2(0.00004),
                                    pointwise_regularizer=regularizers.l2(0.00004))(input)
     tower = layers.ReLU(max_value=6)(tower)
@@ -73,7 +74,7 @@ def inverted_bottleneck(inputs, up_channel_rate, channels, subsample, k_s=3, sco
                                    padding='same',
                                    depthwise_initializer='glorot_normal',
                                    pointwise_initializer='glorot_normal',
-                                   bias_initializer=None,
+                                   bias_initializer='zeros',
                                    depthwise_regularizer=regularizers.l2(0.00004),
                                    pointwise_regularizer=regularizers.l2(0.00004))(tower)
 
