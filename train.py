@@ -11,15 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ======================
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 
 import os
 
 import tensorflow as tf
-#from keras import layers
+# from keras import layers
 from tensorflow.keras import layers
-#import keras
+# import keras
 import numpy as np
 import sys
 from os import getcwd
@@ -46,14 +46,11 @@ from callbacks_model import get_check_pointer_callback
 from callbacks_model import get_tensorboard_callback
 from callbacks_model import get_img_tensorboard_callback
 
-
 print("tensorflow version   :", tf.__version__)
 print("keras version        :", tf.keras.__version__)
 
 
-
 def main():
-
     sys.path.insert(0, TF_MODULE_DIR)
     sys.path.insert(0, EXPORT_DIR)
     sys.path.insert(0, COCO_DATALOAD_DIR)
@@ -71,13 +68,9 @@ def main():
     #
     # os.environ['CUDA_VISIBLE_DEVICES'] = params['visible_devices']
 
-
-
-    train_config    = TrainConfig()
-    model_config    = ModelConfig(setuplog_dir = train_config.setuplog_dir)
-    preproc_config  = PreprocessingConfig(setuplog_dir = train_config.setuplog_dir)
-
-
+    train_config = TrainConfig()
+    model_config = ModelConfig(setuplog_dir=train_config.setuplog_dir)
+    preproc_config = PreprocessingConfig(setuplog_dir=train_config.setuplog_dir)
 
     # ================================================
     # =============== dataset pipeline ===============
@@ -86,16 +79,15 @@ def main():
     # dataloader instance gen
     dataloader_train, dataloader_valid = \
         [DataLoader(
-            is_training     =is_training,
-            data_dir        =DATASET_DIR,
-            transpose_input =False,
-            train_config    =train_config,
-            model_config    =model_config,
-            preproc_config  =preproc_config,
-            use_bfloat16    =False) for is_training in [True, False]]
+            is_training=is_training,
+            data_dir=DATASET_DIR,
+            transpose_input=False,
+            train_config=train_config,
+            model_config=model_config,
+            preproc_config=preproc_config,
+            use_bfloat16=False) for is_training in [True, False]]
 
-
-    dataset_train   = dataloader_train.input_fn()
+    dataset_train = dataloader_train.input_fn()
     # dataset_valid   = dataloader_valid.input_fn()
 
     data = dataset_train.repeat()
@@ -105,22 +97,21 @@ def main():
     # print(targets)
     # data = dataset_train
 
-
     # ================================================
     # ============== configure model =================
     # ================================================
 
     model_builder = HourglassModelBuilder()
     model_builder.build_model()
-    #model_builder.build_model(inputs=inputs)
+    # model_builder.build_model(inputs=inputs)
 
     model = model_builder.model
     model.summary()
 
-    model.compile(optimizer=tf.keras.optimizers.Adam(0.001, epsilon=1e-8),#'adam',
-                  loss=tf.keras.losses.mean_squared_error)#,
-                  #metrics=['mse'])
-                  #target_tensors=[targets])#tf.metrics.Accuracy
+    model.compile(optimizer=tf.keras.optimizers.Adam(0.001, epsilon=1e-8),  # 'adam',
+                  loss=tf.keras.losses.mean_squared_error)  # ,
+    # metrics=['mse'])
+    # target_tensors=[targets])#tf.metrics.Accuracy
 
     # ================================================
     # =============== setup output ===================
@@ -136,7 +127,7 @@ def main():
     output_learning_rate = "_lr{}".format(train_config.learning_rate)
     # output_decoder_filters = "_{}".format(model_config.filter_name)
 
-    output_name = current_time + output_model_name + output_learning_rate# + output_decoder_filters
+    output_name = current_time + output_model_name + output_learning_rate  # + output_decoder_filters
 
     model_path = os.path.join(output_path, "models")
     if not os.path.exists(model_path):
@@ -167,7 +158,6 @@ def main():
                                                             labels=labels, model=model)
     # --------------------------------------------------------------------------------------------------------------------
 
-
     # ================================================
     # ==================== train! ====================
     # ================================================
@@ -176,7 +166,7 @@ def main():
     #           epochs=100,
     #           steps_per_epoch=100,
     #           callbacks=[check_pointer, tensorboard])
-    
+
     model.fit(data,  # dataset_train_one_shot_iterator
               epochs=train_config.epochs,
               steps_per_epoch=train_config.steps_per_epoch,
@@ -196,5 +186,5 @@ def main():
     #
 
 
-if __name__ =='__main__':
+if __name__ == '__main__':
     main()

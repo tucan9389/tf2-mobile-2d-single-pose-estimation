@@ -11,10 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ======================
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import numpy as np
 import cv2
+
 
 class PoseImageProcessor:
     @staticmethod
@@ -38,7 +39,8 @@ class PoseImageProcessor:
         if true_heat is not None:
             a = fig.add_subplot(1, 2, 1)
             a.set_title('True Heatmap')
-            plt.imshow(PoseImageProcessor.get_bgimg(inp, target_size=(true_heat.shape[1], true_heat.shape[0])), alpha=0.5)
+            plt.imshow(PoseImageProcessor.get_bgimg(inp, target_size=(true_heat.shape[1], true_heat.shape[0])),
+                       alpha=0.5)
             tmp = np.amax(true_heat, axis=2)
             plt.imshow(tmp, cmap=plt.cm.gray, alpha=0.7)
             plt.colorbar()
@@ -50,7 +52,8 @@ class PoseImageProcessor:
         if pred_heat is not None:
             a = fig.add_subplot(1, 2, 2)
             a.set_title('Pred Heatmap')
-            plt.imshow(PoseImageProcessor.get_bgimg(inp, target_size=(pred_heat.shape[1], pred_heat.shape[0])), alpha=0.5)
+            plt.imshow(PoseImageProcessor.get_bgimg(inp, target_size=(pred_heat.shape[1], pred_heat.shape[0])),
+                       alpha=0.5)
             tmp = np.amax(pred_heat, axis=2)
             plt.imshow(tmp, cmap=plt.cm.gray, alpha=1, vmin=0.0, vmax=1.0)
             # plt.imshow(tmp, cmap=plt.cm.gray, alpha=1)

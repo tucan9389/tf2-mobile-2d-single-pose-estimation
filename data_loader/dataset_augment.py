@@ -13,14 +13,14 @@ import numpy as np
 from tensorpack.dataflow.imgaug.geometry import RotationAndCropValid
 from enum import Enum
 
-
 # custom addition for tf-tiny-pose-estimation
 from config.model_config import ModelConfig
-model_config = ModelConfig(setuplog_dir = None)
+
+model_config = ModelConfig(setuplog_dir=None)
 
 _network_w = int(model_config.input_size)
 _network_h = _network_w
-_scale     = int(model_config.input_size / model_config.output_size)
+_scale = int(model_config.input_size / model_config.output_size)
 
 
 class CocoPart(Enum):
@@ -38,9 +38,10 @@ class CocoPart(Enum):
     LHip = 11
     LKnee = 12
     LAnkle = 13
-    Background = 14 # Background is not used
+    Background = 14  # Background is not used
 
-#---------------------------------------
+
+# ---------------------------------------
 # not used
 # def set_network_input_wh(w, h):
 #     global _network_w, _network_h
@@ -54,7 +55,7 @@ class CocoPart(Enum):
 #
 # def get_network_output_wh():
 #     return _network_w // _scale, _network_h // _scale
-#---------------------------------------
+# ---------------------------------------
 
 
 def pose_random_scale(meta):
@@ -82,7 +83,7 @@ def pose_random_scale(meta):
     return meta
 
 
-def pose_rotation(meta,preproc_config):
+def pose_rotation(meta, preproc_config):
     deg = random.uniform(preproc_config.MIN_AUGMENT_ROTATE_ANGLE_DEG, \
                          preproc_config.MAX_AUGMENT_ROTATE_ANGLE_DEG)
     img = meta.img
@@ -201,8 +202,6 @@ def pose_resize_shortestedge(meta, target_size):
 
     dst = cv2.resize(img, (neww, newh), interpolation=cv2.INTER_AREA)
 
-
-
     pw = ph = 0
     if neww < _network_w or newh < _network_h:
         pw = max(0, (_network_w - neww) // 2)
@@ -300,27 +299,26 @@ def pose_to_img(meta_l):
     #        meta_l.get_heatmap(target_size=(model_config.output_size, model_config.output_size)).astype(np.float32)
 
 
-def preprocess_image(img_meta_data,preproc_config):
-
+def preprocess_image(img_meta_data, preproc_config):
     if preproc_config.is_scale:
-        img_meta_data   = pose_random_scale(img_meta_data)
+        img_meta_data = pose_random_scale(img_meta_data)
 
     if preproc_config.is_rotate:
-        img_meta_data   = pose_rotation(img_meta_data,preproc_config)
+        img_meta_data = pose_rotation(img_meta_data, preproc_config)
 
     if preproc_config.is_flipping:
-        img_meta_data   = pose_flip(img_meta_data)
+        img_meta_data = pose_flip(img_meta_data)
 
     if preproc_config.is_resize_shortest_edge:
-        img_meta_data   = pose_resize_shortestedge_random(img_meta_data)
+        img_meta_data = pose_resize_shortestedge_random(img_meta_data)
 
     if preproc_config.is_crop:
-        img_meta_data   = pose_crop_random(img_meta_data)
+        img_meta_data = pose_crop_random(img_meta_data)
     else:
         global _network_w, _network_h
         target_size = (_network_w, _network_h)
         pose_crop(img_meta_data, 0, 0, target_size[0], target_size[1])
 
-    images, labels  = pose_to_img(img_meta_data)
+    images, labels = pose_to_img(img_meta_data)
 
     return images, labels

@@ -7,6 +7,7 @@
 import tensorflow as tf
 # from keras import layers, regularizers, activations
 from tensorflow.keras import layers, regularizers, activations
+
 # import tensorflow.contrib.slim as slim
 
 # _init_xavier = tf.contrib.layers.xavier_initializer()
@@ -27,12 +28,11 @@ def max_pool(inputs, k_h, k_w, s_h, s_w, name, padding="same"):
                             padding=padding)(inputs)
 
 
-
 def upsample(inputs, factor, name):
     return layers.UpSampling2D(size=(factor, factor))(inputs)
 
-def separable_conv(input, c_o, k_s, stride, scope):
 
+def separable_conv(input, c_o, k_s, stride, scope):
     tower = layers.SeparableConv2D(filters=1,
                                    kernel_size=[k_s, k_s],
                                    strides=stride,
@@ -61,12 +61,11 @@ def inverted_bottleneck(inputs, up_channel_rate, channels, subsample, k_s=3, sco
     stride = 2 if subsample else 1
 
     tower = layers.Conv2D(up_channel_rate * inputs.get_shape().as_list()[-1],
-                            kernel_size=[1, 1],
-                            kernel_initializer='glorot_normal',
-                            activation=None)(inputs)
+                          kernel_size=[1, 1],
+                          kernel_initializer='glorot_normal',
+                          activation=None)(inputs)
     tower = layers.BatchNormalization()(tower)
     tower = layers.ReLU(max_value=6)(tower)
-
 
     tower = layers.SeparableConv2D(filters=1,
                                    kernel_size=k_s,
@@ -78,8 +77,6 @@ def inverted_bottleneck(inputs, up_channel_rate, channels, subsample, k_s=3, sco
                                    depthwise_regularizer=regularizers.l2(0.00004),
                                    pointwise_regularizer=regularizers.l2(0.00004))(tower)
 
-
-
     tower = layers.Conv2D(channels,
                           kernel_size=[1, 1],
                           kernel_initializer='glorot_normal',
@@ -87,9 +84,8 @@ def inverted_bottleneck(inputs, up_channel_rate, channels, subsample, k_s=3, sco
     tower = layers.BatchNormalization()(tower)
     output = layers.ReLU(max_value=6)(tower)
 
-
     if inputs.get_shape().as_list()[-1] == channels:
-        #output = tf.add(inputs, output)
+        # output = tf.add(inputs, output)
         output = layers.Add()([inputs, output])
 
     return output

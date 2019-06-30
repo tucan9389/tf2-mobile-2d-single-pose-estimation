@@ -11,6 +11,7 @@ import cv2
 import struct
 import math
 
+
 class CocoMetadata:
     __coco_parts = 14
 
@@ -109,7 +110,6 @@ class CocoMetadata:
                     continue
                 heatmap[plane_idx][y][x] = max(heatmap[plane_idx][y][x], math.exp(-exp))
                 heatmap[plane_idx][y][x] = min(heatmap[plane_idx][y][x], 1.0)
-
 
     def read_image(self, img_path):
         img_str = open(img_path, "rb").read()

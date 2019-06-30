@@ -28,11 +28,9 @@ from os.path import join
 from config.path_manager import DATASET_DIR
 from pycocotools.coco import COCO
 
-
 # for coco dataset
 from data_loader import dataset_augment
 from data_loader.dataset_prepare import CocoMetadata
-
 
 sys.path.insert(0, DATASET_DIR)
 
@@ -57,13 +55,13 @@ class DataLoader(object):
                  transpose_input=True):
 
         self.image_preprocessing_fn = dataset_augment.preprocess_image
-        self.is_training            = is_training
-        self.use_bfloat16           = use_bfloat16
-        self.data_dir               = data_dir
-        self.anno                   = None
-        self.train_config           = train_config
-        self.model_config           = model_config
-        self.preproc_config         = preproc_config
+        self.is_training = is_training
+        self.use_bfloat16 = use_bfloat16
+        self.data_dir = data_dir
+        self.anno = None
+        self.train_config = train_config
+        self.model_config = model_config
+        self.preproc_config = preproc_config
 
         if self.data_dir == 'null' or self.data_dir == '':
             self.data_dir = None
@@ -116,15 +114,15 @@ class DataLoader(object):
         idx = img_meta['id']
 
         filename_item_list = img_meta['file_name'].split('/')
-        filename = filename_item_list[1] +'/' + filename_item_list[2]
+        filename = filename_item_list[1] + '/' + filename_item_list[2]
 
         img_path = join(DATASET_DIR, filename)
 
-        img_meta_data   = CocoMetadata(idx=idx,
-                                       img_path=img_path,
-                                       img_meta=img_meta,
-                                       annotations=img_anno,
-                                       sigma=self.preproc_config.heatmap_std)
+        img_meta_data = CocoMetadata(idx=idx,
+                                     img_path=img_path,
+                                     img_meta=img_meta,
+                                     annotations=img_anno,
+                                     sigma=self.preproc_config.heatmap_std)
 
         # print('joint_list = %s' % img_meta_data.joint_list)
         images, labels = self.image_preprocessing_fn(img_meta_data=img_meta_data,
@@ -160,7 +158,7 @@ class DataLoader(object):
         # self.anno      = COCO(dataset_path)
         #
         # imgIds          = self.anno.getImgIds()
-        dataset         = tf.data.Dataset.from_tensor_slices(self.imgIds)
+        dataset = tf.data.Dataset.from_tensor_slices(self.imgIds)
 
         # if self.is_training:
         #     # tf.logging.info('[Input_fn] dataset shuffled and repeated.')
@@ -175,14 +173,14 @@ class DataLoader(object):
         # multiprocessing_num === < the number of CPU cores >
 
         dataset = dataset.apply(tf.data.experimental.map_and_batch(
-                                    map_func=lambda imgId: tuple(
-                                        tf.py_function(
-                                            func=self._parse_function,
-                                            inp=[imgId],
-                                            Tout=[tf.float32, tf.float32])),
-                                    batch_size=self.train_config.batch_size,
-                                    num_parallel_calls=self.train_config.multiprocessing_num,
-                                    drop_remainder=True))
+            map_func=lambda imgId: tuple(
+                tf.py_function(
+                    func=self._parse_function,
+                    inp=[imgId],
+                    Tout=[tf.float32, tf.float32])),
+            batch_size=self.train_config.batch_size,
+            num_parallel_calls=self.train_config.multiprocessing_num,
+            drop_remainder=True))
 
         # cache entire dataset in memory after preprocessing
         # dataset = dataset.cache() # do not use this code for OOM problem
@@ -192,7 +190,7 @@ class DataLoader(object):
 
         # Prefetch overlaps in-feed with training
         # dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE) # tf.data.experimental.AUTOTUNE have to be upper than 1.13
-        dataset = dataset.prefetch(buffer_size=self.train_config.batch_size*3)
+        dataset = dataset.prefetch(buffer_size=self.train_config.batch_size * 3)
         # tf.logging.info('[Input_fn] dataset pipeline building complete')
 
         return dataset
@@ -201,9 +199,9 @@ class DataLoader(object):
         imgs = []
         labels = []
         for i in range(batch_size):
-            img, label = self._parse_function(self.imgIds[i+idx])
+            img, label = self._parse_function(self.imgIds[i + idx])
             imgs.append(img)
             labels.append(label)
-        #imgs, labels = self._parse_function(imgIds[idx:idx + batch_size])
+        # imgs, labels = self._parse_function(imgIds[idx:idx + batch_size])
         import numpy as np
         return np.array(imgs), np.array(labels)

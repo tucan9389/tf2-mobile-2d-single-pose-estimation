@@ -11,24 +11,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ======================
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import os
 import tensorflow as tf
 
-def get_check_pointer_callback(model_path, output_name):
 
+def get_check_pointer_callback(model_path, output_name):
     checkpoint_path = os.path.join(model_path, output_name + ".hdf5")  # ".ckpt"
     check_pointer_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
-                                                             save_weights_only=False,
-                                                             verbose=1)
+                                                                save_weights_only=False,
+                                                                verbose=1)
     return check_pointer_callback
+
 
 def get_tensorboard_callback(log_path, output_name):
     log_path = os.path.join(log_path, output_name)
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_path, histogram_freq=0, write_graph=True, write_images=True)
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_path, histogram_freq=0, write_graph=True,
+                                                          write_images=True)
 
     return tensorboard_callback
+
 
 def get_img_tensorboard_callback(log_path, output_name, images, labels, model):
     # tensorboard image
@@ -52,7 +55,7 @@ def get_img_tensorboard_callback(log_path, output_name, images, labels, model):
         # Log the confusion matrix as an image summary.
         from data_loader.pose_image_processor import PoseImageProcessor
 
-        #summary_str = []
+        # summary_str = []
         predicted_images = []
         for i in range(images.shape[0]):
             image = images[i, :, :, :]
