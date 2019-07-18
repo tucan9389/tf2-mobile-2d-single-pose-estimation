@@ -43,7 +43,6 @@ def separable_conv(input, c_o, k_s, stride, scope):
                                    bias_initializer='zeros',
                                    depthwise_regularizer=regularizers.l2(0.00004),
                                    pointwise_regularizer=regularizers.l2(0.00004))(input)
-    tower = layers.ReLU(max_value=6)(tower)
 
     tower = layers.Conv2D(c_o,
                           kernel_size=[1, 1],
@@ -60,27 +59,30 @@ def inverted_bottleneck(inputs, up_channel_rate, channels, subsample, k_s=3, sco
 
     stride = 2 if subsample else 1
 
-    tower = layers.Conv2D(up_channel_rate * inputs.get_shape().as_list()[-1],
+    tower = layers.Conv2D(filters=up_channel_rate * inputs.get_shape().as_list()[-1],
                           kernel_size=[1, 1],
-                          kernel_initializer='glorot_normal',
+                          kernel_initializer=tf.keras.initializers.glorot_normal(),
+                          bias_initializer=tf.keras.initializers.Zeros(),
                           activation=None)(inputs)
     tower = layers.BatchNormalization()(tower)
     tower = layers.ReLU(max_value=6)(tower)
 
     tower = layers.SeparableConv2D(filters=1,
-                                   kernel_size=k_s,
                                    strides=stride,
+                                   depth_multiplier=1,
+                                   kernel_size=k_s,
+                                   depthwise_initializer=tf.keras.initializers.glorot_normal(),
+                                   pointwise_initializer=tf.keras.initializers.glorot_normal(),
+                                   bias_initializer=None,
                                    padding='same',
-                                   depthwise_initializer='glorot_normal',
-                                   pointwise_initializer='glorot_normal',
-                                   bias_initializer='zeros',
-                                   depthwise_regularizer=regularizers.l2(0.00004),
-                                   pointwise_regularizer=regularizers.l2(0.00004))(tower)
+                                   depthwise_regularizer=tf.keras.regularizers.l2(0.00004),
+                                   pointwise_regularizer=tf.keras.regularizers.l2(0.00004))(tower)
 
-    tower = layers.Conv2D(channels,
+    tower = layers.Conv2D(filters=channels,
                           kernel_size=[1, 1],
-                          kernel_initializer='glorot_normal',
-                          activation='relu')(tower)
+                          kernel_initializer=tf.keras.initializers.glorot_normal(),
+                          bias_initializer=tf.keras.initializers.Zeros(),
+                          activation=None)(tower)
     tower = layers.BatchNormalization()(tower)
     output = layers.ReLU(max_value=6)(tower)
 
@@ -96,11 +98,14 @@ def convb(input, k_h, k_w, c_o, stride, name, relu=True):
                           kernel_size=[k_h, k_w],
                           strides=(stride, stride),
                           activation=None,
-                          kernel_initializer='glorot_normal',
+                          kernel_initializer=tf.keras.initializers.glorot_normal(),
+                          bias_initializer=tf.keras.initializers.Zeros(),
                           kernel_regularizer=regularizers.l2(0.00004))(input)
-    if relu:
-        tower = layers.ReLU()(tower)
+
     tower = layers.BatchNormalization()(tower)
     output = layers.ReLU(max_value=6)(tower)
+
+    # if relu:
+    #     tower = layers.ReLU()(tower)
 
     return output

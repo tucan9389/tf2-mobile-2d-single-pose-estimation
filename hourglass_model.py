@@ -13,6 +13,8 @@
 # ======================
 # -*- coding: utf-8 -*-
 
+# ref: https://github.com/edvardHua/PoseEstimationForMobile/blob/master/training/src/network_mv2_hourglass.py
+
 import tensorflow as tf
 from tensorflow.keras import models, layers
 # from keras import models, layers
@@ -52,14 +54,6 @@ class HourglassModelBuilder():
             tower = inverted_bottleneck(tower, up_channel_ratio(6), out_channel_ratio(24), 0, 3)
             block_front = inverted_bottleneck(tower, up_channel_ratio(6), out_channel_ratio(24), 0, 3)
 
-            # block_front = slim.stack(down_sample, inverted_bottleneck,
-            #                          [
-            #                              (up_channel_ratio(6), out_channel_ratio(24), 0, 3),
-            #                              (up_channel_ratio(6), out_channel_ratio(24), 0, 3),
-            #                              (up_channel_ratio(6), out_channel_ratio(24), 0, 3),
-            #                              (up_channel_ratio(6), out_channel_ratio(24), 0, 3),
-            #                              (up_channel_ratio(6), out_channel_ratio(24), 0, 3),
-            #                          ], scope="hourglass_front_%d" % stage_nums)
             stage_nums -= 1
             block_mid = self.hourglass_module(block_front, stage_nums, intermediate_heatmap_layers)
             block_back = inverted_bottleneck(
@@ -69,22 +63,12 @@ class HourglassModelBuilder():
             up_sample = upsample(block_back, 2, "hourglass_upsample_%d" % stage_nums)
 
             # jump layer
-            # branch_jump = slim.stack(inp, inverted_bottleneck,
-            #                          [
-            #                              (up_channel_ratio(6), out_channel_ratio(24), 0, 3),
-            #                              (up_channel_ratio(6), out_channel_ratio(24), 0, 3),
-            #                              (up_channel_ratio(6), out_channel_ratio(24), 0, 3),
-            #                              (up_channel_ratio(6), out_channel_ratio(24), 0, 3),
-            #                              (up_channel_ratio(6), N_KPOINTS, 0, 3),
-            #                          ], scope="hourglass_branch_jump_%d" % stage_nums)
-
             tower = inverted_bottleneck(inp, up_channel_ratio(6), out_channel_ratio(24), 0, 3)
             tower = inverted_bottleneck(tower, up_channel_ratio(6), out_channel_ratio(24), 0, 3)
             tower = inverted_bottleneck(tower, up_channel_ratio(6), out_channel_ratio(24), 0, 3)
             tower = inverted_bottleneck(tower, up_channel_ratio(6), out_channel_ratio(24), 0, 3)
             branch_jump = inverted_bottleneck(tower, up_channel_ratio(6), N_KPOINTS, 0, 3)
 
-            # curr_hg_out = tf.add(up_sample, branch_jump, name="hourglass_out_%d" % stage_nums)
             curr_hg_out = layers.Add()([up_sample, branch_jump])
 
             # mid supervise
