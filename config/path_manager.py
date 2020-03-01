@@ -37,7 +37,8 @@ EXPORT_DIR = os.path.join(PROJ_HOME, 'export')
 COCO_DATALOAD_DIR = TF_MODULE_DIR  # + '/coco_dataload_modules'
 
 # data path
-DATASET_DIR = os.path.join(PROJ_HOME, 'datasets', 'ai_challenger')
+# DATASET_DIR = os.path.join(PROJ_HOME, 'datasets', 'ai_challenger')
+DATASET_DIR = "/Volumes/tucan-SSD/datasets/ai_challenger"
 # DATASET_DIR                  = '/home/jwkangmacpro2/dataset/ai_challenger'
 
 COCO_TRAINSET_DIR = os.path.join(DATASET_DIR, 'train')

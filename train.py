@@ -40,7 +40,8 @@ from config.train_config import TrainConfig
 
 from data_loader.data_loader import DataLoader
 
-from hourglass_model import HourglassModelBuilder
+# from models.hourglass_model import HourglassModelBuilder
+from models.simpleposemobile_coco import simplepose_mobile_mobilenetv3_small_w1_coco
 
 from callbacks_model import get_check_pointer_callback
 from callbacks_model import get_tensorboard_callback
@@ -90,7 +91,7 @@ def main():
     dataset_train = dataloader_train.input_fn()
     # dataset_valid   = dataloader_valid.input_fn()
 
-    data = dataset_train.repeat()
+    # data = dataset_train.repeat()
     # iterator = data.make_one_shot_iterator()
     # inputs, targets = iterator.get_next()
     # print(inputs)
@@ -101,17 +102,59 @@ def main():
     # ============== configure model =================
     # ================================================
 
-    model_builder = HourglassModelBuilder()
-    model_builder.build_model()
-    # model_builder.build_model(inputs=inputs)
+    # # HourglassModelBuilder
+    # model_builder = HourglassModelBuilder()
+    # model_builder.build_model()
+    # # model_builder.build_model(inputs=inputs)
+    #
+    # model = model_builder.model
 
-    model = model_builder.model
-    model.summary()
+    # SimplePoseMobile
+    model = simplepose_mobile_mobilenetv3_small_w1_coco(keypoints=14)
+
+
+
+    # loss_object = tf.keras.losses.MeanSquaredError()
+    # optimizer = tf.keras.optimizers.Adam() # Adam(0.001, epsilon=1e-8)
+    # train_loss = tf.keras.metrics.Mean(name="train_loss")
+    # # train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_accuracy")
+    # test_loss = tf.keras.metrics.Mean(name="test_loss")
+    # test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_accuracy")
+    #
+    # @tf.function
+    # def train_step(images, heatmaps):
+    #     with tf.GradientTape() as tape:
+    #         predictions = net(images)
+    #         print("!!!!", heatmaps.shape, predictions.shape)
+    #         loss = loss_object(heatmaps, predictions)
+    #     gradients = tape.gradient(loss, net.trainable_variables)
+    #     optimizer.apply_gradients(zip(gradients, net.trainable_variables))
+    #     train_loss(loss)
+    #     # train_accuracy(heatmaps, predictions)
+    #
+    # num_epochs = train_config.epochs
+    #
+    # for epoch in range(num_epochs):
+    #     for images, heatmaps in dataset_train:
+    #         # print(images)  # (32, 128, 128, 3)
+    #         # print(heatmaps)  # (32, 32, 32, 14)
+    #         print("" + str(epoch) + " epoch")
+    #         train_step(images, heatmaps)
+
+
+
+
+    # exit(0)
 
     model.compile(optimizer=tf.keras.optimizers.Adam(0.001, epsilon=1e-8),  # 'adam',
                   loss=tf.keras.losses.mean_squared_error)  # ,
     # metrics=['mse'])
     # target_tensors=[targets])#tf.metrics.Accuracy
+    # input_shape = (None, 32, 32, 3)
+    # input_shape = (None, 32, 32, 3)
+    # model.build(input_shape)  # `input_shape` is the shape of the input data
+    # # e.g. input_shape = (None, 32, 32, 3)
+    # model.summary()
 
     # ================================================
     # =============== setup output ===================
@@ -122,12 +165,13 @@ def main():
     if not os.path.exists(output_path):
         os.mkdir(output_path)
 
-    output_model_name = "_hg"  # hourglass
+    #output_model_name = "_hg"  # hourglass
+    output_model_name = "_spm"  # hourglass
     output_base_model_name = "_{}".format(model_config.base_model_name)
-    output_learning_rate = "_lr{}".format(train_config.learning_rate)
+    # output_learning_rate = "_lr{}".format(train_config.learning_rate)
     # output_decoder_filters = "_{}".format(model_config.filter_name)
 
-    output_name = current_time + output_model_name + output_learning_rate  # + output_decoder_filters
+    output_name = current_time + output_model_name # + output_learning_rate  # + output_decoder_filters
 
     model_path = os.path.join(output_path, "models")
     if not os.path.exists(model_path):
@@ -147,15 +191,15 @@ def main():
     images, labels = dataloader_valid.get_images(22, batch_size)
 
     # --------------------------------------------------------------------------------------------------------------------
-    # output model file(.hdf5)
-    check_pointer_callback = get_check_pointer_callback(model_path=model_path, output_name=output_name)
-
-    # output tensorboard log
-    tensorboard_callback = get_tensorboard_callback(log_path=log_path, output_name=output_name)
-
-    # tensorboard image
-    img_tensorboard_callback = get_img_tensorboard_callback(log_path=log_path, output_name=output_name, images=images,
-                                                            labels=labels, model=model)
+    # # output model file(.hdf5)
+    # check_pointer_callback = get_check_pointer_callback(model_path=model_path, output_name=output_name)
+    #
+    # # output tensorboard log
+    # tensorboard_callback = get_tensorboard_callback(log_path=log_path, output_name=output_name)
+    #
+    # # tensorboard image
+    # img_tensorboard_callback = get_img_tensorboard_callback(log_path=log_path, output_name=output_name, images=images,
+    #                                                         labels=labels, model=model)
     # --------------------------------------------------------------------------------------------------------------------
 
     # ================================================
@@ -167,15 +211,21 @@ def main():
     #           steps_per_epoch=100,
     #           callbacks=[check_pointer, tensorboard])
 
-    model.fit(data,  # dataset_train_one_shot_iterator
-              epochs=train_config.epochs,
-              steps_per_epoch=train_config.steps_per_epoch,
-              # validation_steps=32,
-              # validation_data=dataset_valid,
-              callbacks=[
-                  check_pointer_callback,
-                  tensorboard_callback,
-                  img_tensorboard_callback])
+    # model.fit(dataset_train,  # dataset_train_one_shot_iterator
+    #           epochs=train_config.epochs,
+    #           steps_per_epoch=train_config.steps_per_epoch)
+
+    model.fit(dataset_train)
+
+    # model.fit(data,  # dataset_train_one_shot_iterator
+    #           epochs=train_config.epochs,
+    #           steps_per_epoch=train_config.steps_per_epoch,
+    #           # validation_steps=32,
+    #           # validation_data=dataset_valid,
+    #           callbacks=[
+    #               check_pointer_callback,
+    #               # tensorboard_callback,
+    #               img_tensorboard_callback])
 
     # ================================================
     # =================== evaluate ===================
@@ -184,6 +234,7 @@ def main():
     #
     # TODO
     #
+
 
 
 if __name__ == '__main__':
