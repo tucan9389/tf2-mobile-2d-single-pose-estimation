@@ -114,37 +114,43 @@ def main():
 
 
 
-    # loss_object = tf.keras.losses.MeanSquaredError()
-    # optimizer = tf.keras.optimizers.Adam() # Adam(0.001, epsilon=1e-8)
-    # train_loss = tf.keras.metrics.Mean(name="train_loss")
-    # # train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_accuracy")
-    # test_loss = tf.keras.metrics.Mean(name="test_loss")
-    # test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_accuracy")
-    #
-    # @tf.function
-    # def train_step(images, heatmaps):
-    #     with tf.GradientTape() as tape:
-    #         predictions = net(images)
-    #         print("!!!!", heatmaps.shape, predictions.shape)
-    #         loss = loss_object(heatmaps, predictions)
-    #     gradients = tape.gradient(loss, net.trainable_variables)
-    #     optimizer.apply_gradients(zip(gradients, net.trainable_variables))
-    #     train_loss(loss)
-    #     # train_accuracy(heatmaps, predictions)
-    #
-    # num_epochs = train_config.epochs
-    #
-    # for epoch in range(num_epochs):
-    #     for images, heatmaps in dataset_train:
-    #         # print(images)  # (32, 128, 128, 3)
-    #         # print(heatmaps)  # (32, 32, 32, 14)
-    #         print("" + str(epoch) + " epoch")
-    #         train_step(images, heatmaps)
+    loss_object = tf.keras.losses.MeanSquaredError()
+    optimizer = tf.keras.optimizers.Adam() # Adam(0.001, epsilon=1e-8)
+    train_loss = tf.keras.metrics.Mean(name="train_loss")
+    # train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_accuracy")
+    test_loss = tf.keras.metrics.Mean(name="test_loss")
+    test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_accuracy")
+
+    @tf.function
+    def train_step(images, heatmaps):
+        with tf.GradientTape() as tape:
+            predictions = model(images)
+            loss = loss_object(heatmaps, predictions)
+        gradients = tape.gradient(loss, model.trainable_variables)
+        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+        train_loss(loss)
+        return loss
+        # train_accuracy(heatmaps, predictions)
+
+    num_epochs = 1 #train_config.epochs
+
+    step = 0
+    number_of_echo_period = 100
+    for epoch in range(num_epochs):
+        print("-"*4 + " START " + str(epoch) + " EPOCH " + "-"*4)
+        for images, heatmaps in dataset_train:
+            step += 1
+            # print(images)  # (32, 128, 128, 3)
+            # print(heatmaps)  # (32, 32, 32, 14)
+            loss = train_step(images, heatmaps)
+
+            if step % number_of_echo_period == 0:
+                print("  step: %d, loss: %.4f" % (step, loss))
 
 
 
 
-    # exit(0)
+    exit(0)
 
     model.compile(optimizer=tf.keras.optimizers.Adam(0.001, epsilon=1e-8),  # 'adam',
                   loss=tf.keras.losses.mean_squared_error)  # ,
