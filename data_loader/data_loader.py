@@ -67,14 +67,14 @@ class DataLoader(object):
             self.data_dir = None
         self.transpose_input = transpose_input
 
-        json_filename_split = DATASET_DIR.split('/')
+        json_filename_split = data_dir.split('/')
         if self.is_training:
             json_filename = json_filename_split[-1] + '_train.json'
         else:
             json_filename = json_filename_split[-1] + '_valid.json'
 
         # tf.logging.info('json loading from %s' % json_filename)
-        dataset_path = join(DATASET_DIR, json_filename)
+        dataset_path = join(data_dir, json_filename)
         self.anno = COCO(dataset_path)
 
         self.imgIds = self.anno.getImgIds()
@@ -116,7 +116,7 @@ class DataLoader(object):
         filename_item_list = img_meta['file_name'].split('/')
         filename = filename_item_list[1] + '/' + filename_item_list[2]
 
-        img_path = join(DATASET_DIR, filename)
+        img_path = join(self.data_dir, filename)
 
         img_meta_data = CocoMetadata(idx=idx,
                                      img_path=img_path,

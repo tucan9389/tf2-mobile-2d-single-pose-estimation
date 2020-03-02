@@ -137,7 +137,7 @@ def main():
     step = 0
     number_of_echo_period = 100
     for epoch in range(num_epochs):
-        print("-"*4 + " START " + str(epoch) + " EPOCH " + "-"*4)
+        print("-"*4 + " " + str(epoch) + " EPOCH " + "-"*4)
         for images, heatmaps in dataset_train:
             step += 1
             # print(images)  # (32, 128, 128, 3)
