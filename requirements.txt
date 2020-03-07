@@ -8,6 +8,7 @@ msgpack
 matplotlib
 pycocotools
 opencv-python
+IPython
 tensorpack
 six
 coremltools

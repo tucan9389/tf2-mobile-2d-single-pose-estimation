@@ -23,7 +23,7 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 import tensorflow as tf
-from os.path import join
+import os
 
 from config.path_manager import DATASET_DIR
 from pycocotools.coco import COCO
@@ -46,18 +46,19 @@ class DataLoader(object):
             transpose_input: 'bool' for whether to use the double transpose trick
     """
 
-    def __init__(self, is_training,
+    def __init__(self,
                  data_dir,
-                 use_bfloat16,
                  train_config,
                  model_config,
                  preproc_config,
-                 transpose_input=True):
+                 transpose_input=False,
+                 use_bfloat16=False):
 
         self.image_preprocessing_fn = dataset_augment.preprocess_image
-        self.is_training = is_training
         self.use_bfloat16 = use_bfloat16
         self.data_dir = data_dir
+        self.images_dir_path = os.path.join(data_dir, "images")
+        self.annotation_json_path = os.path.join(data_dir, "annotation.json")
         self.anno = None
         self.train_config = train_config
         self.model_config = model_config
@@ -65,17 +66,10 @@ class DataLoader(object):
 
         if self.data_dir == 'null' or self.data_dir == '':
             self.data_dir = None
+            exit(1)
         self.transpose_input = transpose_input
 
-        json_filename_split = data_dir.split('/')
-        if self.is_training:
-            json_filename = json_filename_split[-1] + '_train.json'
-        else:
-            json_filename = json_filename_split[-1] + '_valid.json'
-
-        # tf.logging.info('json loading from %s' % json_filename)
-        dataset_path = join(data_dir, json_filename)
-        self.anno = COCO(dataset_path)
+        self.anno = COCO(self.annotation_json_path)
 
         self.imgIds = self.anno.getImgIds()
 
@@ -113,10 +107,8 @@ class DataLoader(object):
         img_anno = self.anno.loadAnns(anno_ids)
         idx = img_meta['id']
 
-        filename_item_list = img_meta['file_name'].split('/')
-        filename = filename_item_list[1] + '/' + filename_item_list[2]
-
-        img_path = join(self.data_dir, filename)
+        img_filename = img_meta['file_name']
+        img_path = os.path.join(self.images_dir_path, img_filename)
 
         img_meta_data = CocoMetadata(idx=idx,
                                      img_path=img_path,
@@ -144,34 +136,8 @@ class DataLoader(object):
                 A `tf.data.Dataset` object.
             doc reference: https://www.tensorflow.org/api_docs/python/tf/data/TFRecordDataset
         """
-        # tf.logging.info('[Input_fn]------------------------------------')
-        # tf.logging.info('[Input_fn] is_training = %s' % self.is_training)
 
-        # json_filename_split = DATASET_DIR.split('/')
-        # if self.is_training:
-        #     json_filename       = json_filename_split[-1] + '_train.json'
-        # else:
-        #     json_filename       = json_filename_split[-1] + '_valid.json'
-        #
-        # # tf.logging.info('json loading from %s' % json_filename)
-        # dataset_path = join(DATASET_DIR, json_filename)
-        # self.anno      = COCO(dataset_path)
-        #
-        # imgIds          = self.anno.getImgIds()
         dataset = tf.data.Dataset.from_tensor_slices(self.imgIds)
-
-        # if self.is_training:
-        #     # tf.logging.info('[Input_fn] dataset shuffled and repeated.')
-        #     dataset = dataset.apply(tf.data.experimental.shuffle_and_repeat(buffer_size=self.train_config.py.shuffle_size,
-        #                                                                 count=None))
-        # else:
-        #     # tf.logging.info('[Input_fn] dataset repeated only.')
-        #     dataset = dataset.repeat(count=None)
-
-        # # Read the data from disk in parallel
-        # where cycle_length is the Number of training files to read in parallel.
-        # multiprocessing_num === < the number of CPU cores >
-
         dataset = dataset.apply(tf.data.experimental.map_and_batch(
             map_func=lambda imgId: tuple(
                 tf.py_function(
@@ -202,6 +168,5 @@ class DataLoader(object):
             img, label = self._parse_function(self.imgIds[i + idx])
             imgs.append(img)
             labels.append(label)
-        # imgs, labels = self._parse_function(imgIds[idx:idx + batch_size])
         import numpy as np
         return np.array(imgs), np.array(labels)

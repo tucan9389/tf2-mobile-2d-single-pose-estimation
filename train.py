@@ -12,236 +12,180 @@
 # limitations under the License.
 # ======================
 # -*- coding: utf-8 -*-
+
 from __future__ import absolute_import, division, print_function
 
 import os
+import numpy as np
+import datetime
 
 import tensorflow as tf
-# from keras import layers
-from tensorflow.keras import layers
-# import keras
-import numpy as np
-import sys
-from os import getcwd
-from datetime import datetime
 
-from config.path_manager import PROJ_HOME
-
-import configparser
-
-from config.path_manager import TF_MODULE_DIR
-from config.path_manager import EXPORT_DIR
-from config.path_manager import COCO_DATALOAD_DIR
 from config.path_manager import DATASET_DIR
-
 from config.model_config import ModelConfig
 from config.train_config import PreprocessingConfig
 from config.train_config import TrainConfig
 
+from common import get_time_and_step_interval
+
+
+print("tensorflow version   :", tf.__version__) # 2.1.0
+print("keras version        :", tf.keras.__version__) # 2.2.4-tf
+
+train_config = TrainConfig()
+model_config = ModelConfig()
+preproc_config = PreprocessingConfig()
+
+train_config.input_size = 256
+train_config.output_size = 64
+
+dataset_name = DATASET_DIR.split("/")[-1]
+current_time = datetime.datetime.now().strftime("%m%d%H%M")
+output_model_name = "_sp-" + dataset_name
+output_name = current_time + output_model_name
+
+train_config.batch_size = 32
+
+# ================================================
+# ================= load dataset =================
+# ================================================
+
 from data_loader.data_loader import DataLoader
 
-# from models.hourglass_model import HourglassModelBuilder
-from models.simpleposemobile_coco import simplepose_mobile_mobilenetv3_small_w1_coco
+# dataloader instance gen
+train_dataset_path = os.path.join(DATASET_DIR, "train")
+print(">> LOAD TRAIN DATASET FORM", train_dataset_path)
+dataloader_train = DataLoader(
+        data_dir=train_dataset_path,
+        train_config=train_config,
+        model_config=model_config,
+        preproc_config=preproc_config)
 
-from callbacks_model import get_check_pointer_callback
-from callbacks_model import get_tensorboard_callback
-from callbacks_model import get_img_tensorboard_callback
+valid_dataset_path = os.path.join(DATASET_DIR, "valid")
+print(">> LOAD VALID DATASET FORM", valid_dataset_path)
+dataloader_valid = DataLoader(
+        data_dir=valid_dataset_path,
+        train_config=train_config,
+        model_config=model_config,
+        preproc_config=preproc_config)
 
-print("tensorflow version   :", tf.__version__)
-print("keras version        :", tf.keras.__version__)
+# train dataset
+dataset_train = dataloader_train.input_fn()
 
+# validation images
+val_images, val_heatmaps = dataloader_valid.get_images(0, batch_size=25) # from 22 index 6 images and 6 labels
 
-def main():
-    sys.path.insert(0, TF_MODULE_DIR)
-    sys.path.insert(0, EXPORT_DIR)
-    sys.path.insert(0, COCO_DATALOAD_DIR)
+# ================================================
+# ============== configure model =================
+# ================================================
+# from models.simpleposemobile_coco import simplepose_mobile_mobilenetv3_small_w1_coco as simpleposemodel
+# from models.simpleposemobile_coco import simplepose_mobile_mobilenetv2b_w1_coco as simpleposemodel
+# from models.simplepose_coco import simplepose_resneta152b_coco as simpleposemodel
+from models.simplepose_coco import simplepose_resnet50b_coco as simpleposemodel
 
-    # # configuration file
-    # config = configparser.ConfigParser()
-    #
-    # config_file = "mv2_cpm.cfg"
-    # if os.path.exists(config_file):
-    #     config.read(config_file)
+# SimplePoseMobile
+model = simpleposemodel(keypoints=14)
 
-    # params = {}
-    # for _ in config.options("Train"):
-    #     params[_] = eval(config.get("Train", _))
-    #
-    # os.environ['CUDA_VISIBLE_DEVICES'] = params['visible_devices']
+# model configuration
+model.return_heatmap = True
 
-    train_config = TrainConfig()
-    model_config = ModelConfig(setuplog_dir=train_config.setuplog_dir)
-    preproc_config = PreprocessingConfig(setuplog_dir=train_config.setuplog_dir)
+loss_object = tf.keras.losses.MeanSquaredError()
+optimizer = tf.keras.optimizers.Adam(0.001, epsilon=1e-8)
+train_loss = tf.keras.metrics.Mean(name="train_loss")
+test_loss = tf.keras.metrics.Mean(name="test_loss")
+test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_accuracy")
 
-    # ================================================
-    # =============== dataset pipeline ===============
-    # ================================================
+@tf.function
+def train_step(images, heatmaps):
+    with tf.GradientTape() as tape:
+        predictions = model(images)
+        loss = loss_object(heatmaps, predictions)
+    gradients = tape.gradient(loss, model.trainable_variables)
+    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    train_loss(loss)
+    return loss
 
-    # dataloader instance gen
-    dataloader_train, dataloader_valid = \
-        [DataLoader(
-            is_training=is_training,
-            data_dir=DATASET_DIR,
-            transpose_input=False,
-            train_config=train_config,
-            model_config=model_config,
-            preproc_config=preproc_config,
-            use_bfloat16=False) for is_training in [True, False]]
+from save_result_as_image import save_result_image
 
-    dataset_train = dataloader_train.input_fn()
-    # dataset_valid   = dataloader_valid.input_fn()
+output_path = "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
 
-    # data = dataset_train.repeat()
-    # iterator = data.make_one_shot_iterator()
-    # inputs, targets = iterator.get_next()
-    # print(inputs)
-    # print(targets)
-    # data = dataset_train
+def val_step(step, images, heamaps, predictions):
+    val_image_results_directory = "val_image_results"
 
-    # ================================================
-    # ============== configure model =================
-    # ================================================
-
-    # # HourglassModelBuilder
-    # model_builder = HourglassModelBuilder()
-    # model_builder.build_model()
-    # # model_builder.build_model(inputs=inputs)
-    #
-    # model = model_builder.model
-
-    # SimplePoseMobile
-    model = simplepose_mobile_mobilenetv3_small_w1_coco(keypoints=14)
-
-
-
-    loss_object = tf.keras.losses.MeanSquaredError()
-    optimizer = tf.keras.optimizers.Adam() # Adam(0.001, epsilon=1e-8)
-    train_loss = tf.keras.metrics.Mean(name="train_loss")
-    # train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_accuracy")
-    test_loss = tf.keras.metrics.Mean(name="test_loss")
-    test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_accuracy")
-
-    @tf.function
-    def train_step(images, heatmaps):
-        with tf.GradientTape() as tape:
-            predictions = model(images)
-            loss = loss_object(heatmaps, predictions)
-        gradients = tape.gradient(loss, model.trainable_variables)
-        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-        train_loss(loss)
-        return loss
-        # train_accuracy(heatmaps, predictions)
-
-    num_epochs = 1 #train_config.epochs
-
-    step = 0
-    number_of_echo_period = 100
-    for epoch in range(num_epochs):
-        print("-"*4 + " " + str(epoch) + " EPOCH " + "-"*4)
-        for images, heatmaps in dataset_train:
-            step += 1
-            # print(images)  # (32, 128, 128, 3)
-            # print(heatmaps)  # (32, 32, 32, 14)
-            loss = train_step(images, heatmaps)
-
-            if step % number_of_echo_period == 0:
-                print("  step: %d, loss: %.4f" % (step, loss))
-
-
-
-
-    exit(0)
-
-    model.compile(optimizer=tf.keras.optimizers.Adam(0.001, epsilon=1e-8),  # 'adam',
-                  loss=tf.keras.losses.mean_squared_error)  # ,
-    # metrics=['mse'])
-    # target_tensors=[targets])#tf.metrics.Accuracy
-    # input_shape = (None, 32, 32, 3)
-    # input_shape = (None, 32, 32, 3)
-    # model.build(input_shape)  # `input_shape` is the shape of the input data
-    # # e.g. input_shape = (None, 32, 32, 3)
-    # model.summary()
-
-    # ================================================
-    # =============== setup output ===================
-    # ================================================
-
-    current_time = datetime.now().strftime("%m%d%H%M")
-    output_path = os.path.join(PROJ_HOME, "outputs")
     if not os.path.exists(output_path):
         os.mkdir(output_path)
+    if not os.path.exists(os.path.join(output_path, output_name)):
+        os.mkdir(os.path.join(output_path, output_name))
+    if not os.path.exists(os.path.join(output_path, output_name, val_image_results_directory)):
+        os.mkdir(os.path.join(output_path, output_name, val_image_results_directory))
 
-    #output_model_name = "_hg"  # hourglass
-    output_model_name = "_spm"  # hourglass
-    output_base_model_name = "_{}".format(model_config.base_model_name)
-    # output_learning_rate = "_lr{}".format(train_config.learning_rate)
-    # output_decoder_filters = "_{}".format(model_config.filter_name)
+    for i in range(images.shape[0]):
+        image = images[i, :, :, :]
+        heamap = heamaps[i, :, :, :]
+        prediction = predictions[i, :, :, :]
 
-    output_name = current_time + output_model_name # + output_learning_rate  # + output_decoder_filters
+        # result_image = display(i, image, heamap, prediction)
+        result_image_path = os.path.join(output_path, output_name, val_image_results_directory, "result%d-%d.jpg" % (i, step))
+        save_result_image(result_image_path, image, heamap, prediction)
+        # print("val_step: save result image on \"" + result_image_path + "\"")
 
-    model_path = os.path.join(output_path, "models")
-    if not os.path.exists(model_path):
-        os.mkdir(model_path)
+def save_model(step=None, label=None):
+    saved_model_directory = "saved_model"
+    if step is not None:
+        saved_model_directory = saved_model_directory + "-%d" % step
+    if label is not None:
+        saved_model_directory = saved_model_directory + "-" + label
 
-    log_path = os.path.join(output_path, "logs")
-    if not os.path.exists(log_path):
-        os.mkdir(log_path)
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+    if not os.path.exists(os.path.join(output_path, output_name)):
+        os.mkdir(os.path.join(output_path, output_name))
+    if not os.path.exists(os.path.join(output_path, output_name, saved_model_directory)):
+        os.mkdir(os.path.join(output_path, output_name, saved_model_directory))
 
-    print("\n")
-    print("model path:", model_path)
-    print("log path  :", log_path)
-    print("model name:", output_name)
-    print("\n")
+    saved_model_path = os.path.join(output_path, output_name, saved_model_directory)
 
-    batch_size = 6
-    images, labels = dataloader_valid.get_images(22, batch_size)
+    print("-"*20 + " MODEL SAVE!! " + "-"*20)
+    print("saved model path: " + saved_model_path)
+    model.save(saved_model_path)
+    print("-"*18 + " MODEL SAVE DONE!! " + "-"*18)
 
-    # --------------------------------------------------------------------------------------------------------------------
-    # # output model file(.hdf5)
-    # check_pointer_callback = get_check_pointer_callback(model_path=model_path, output_name=output_name)
-    #
-    # # output tensorboard log
-    # tensorboard_callback = get_tensorboard_callback(log_path=log_path, output_name=output_name)
-    #
-    # # tensorboard image
-    # img_tensorboard_callback = get_img_tensorboard_callback(log_path=log_path, output_name=output_name, images=images,
-    #                                                         labels=labels, model=model)
-    # --------------------------------------------------------------------------------------------------------------------
 
-    # ================================================
-    # ==================== train! ====================
-    # ================================================
 
-    # model.fit(data,
-    #           epochs=100,
-    #           steps_per_epoch=100,
-    #           callbacks=[check_pointer, tensorboard])
 
-    # model.fit(dataset_train,  # dataset_train_one_shot_iterator
-    #           epochs=train_config.epochs,
-    #           steps_per_epoch=train_config.steps_per_epoch)
-
-    model.fit(dataset_train)
-
-    # model.fit(data,  # dataset_train_one_shot_iterator
-    #           epochs=train_config.epochs,
-    #           steps_per_epoch=train_config.steps_per_epoch,
-    #           # validation_steps=32,
-    #           # validation_data=dataset_valid,
-    #           callbacks=[
-    #               check_pointer_callback,
-    #               # tensorboard_callback,
-    #               img_tensorboard_callback])
-
-    # ================================================
-    # =================== evaluate ===================
-    # ================================================
-
-    #
-    # TODO
-    #
+num_epochs = 1000
+step = 1
+number_of_echo_period = 100
+number_of_validimage_period = 1000
+number_of_modelsave_period = 2000
 
 
 
 if __name__ == '__main__':
-    main()
+
+    # TRAIN!!
+    get_time_and_step_interval(step, is_init=True)
+
+    for epoch in range(num_epochs):
+        print("-" * 4 + " " + str(epoch + 1) + " EPOCH " + "-" * 4)
+        for images, heatmaps in dataset_train:
+
+            # print(images.shape)  # (32, 128, 128, 3)
+            # print(heatmaps.shape)  # (32, 32, 32, 14)
+            loss = train_step(images, heatmaps)
+
+            step += 1
+            if step % number_of_echo_period == 0:
+                total_interval, per_step_interval = get_time_and_step_interval(step)
+                print(">> step: %d, total: %s, per_step: %s, loss: %.5f" % (step, total_interval, per_step_interval, loss))
+
+            # validation phase
+            if step % number_of_validimage_period == 0:
+                val_predictions = model(val_images)
+                val_predictions = np.array(val_predictions)
+                val_step(step, val_images, val_heatmaps, val_predictions)
+
+            if step % number_of_modelsave_period == 0:
+                save_model(step=step)
+
+    save_model(step=step, label="final")

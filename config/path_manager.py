@@ -17,33 +17,12 @@
     filename: path_manager.py
     description: this module include all path information on this proj
     - Author : jaewook Kang @ 20180613
+    - Updated: Doyoung Gwak @ 20200307
 '''
 
-from os import getcwd
-from os import chdir
 import os
 
-# move to project home directory
-# chdir('..') # what is this?? # this line will be removed
-
-PROJ_HOME = getcwd()  # os.path.join(getcwd(), "tf-pose-estimation-with-transfer-learning")#"tf2-mobile-pose-estimation")
-TF_MODULE_DIR = PROJ_HOME  # + '/tfmodules'
-
-print("[pathmanager] PROJ HOME = %s" % PROJ_HOME)
-
-# tf module related directory
-EXPORT_DIR = os.path.join(PROJ_HOME, 'export')
-# EXPORT_DIR                = 'gs://tf-tiny-pose-est'
-COCO_DATALOAD_DIR = TF_MODULE_DIR  # + '/coco_dataload_modules'
-
 # data path
-# DATASET_DIR = os.path.join(PROJ_HOME, 'datasets', 'ai_challenger')
 DATASET_DIR = "/Volumes/tucan-SSD/datasets/ai_challenger"
-# DATASET_DIR                  = '/home/jwkangmacpro2/dataset/ai_challenger'
-
-COCO_TRAINSET_DIR = os.path.join(DATASET_DIR, 'train')
-COCO_VALIDSET_DIR = os.path.join(DATASET_DIR, 'valid')
-LOCAL_LOG_DIR = os.path.join(PROJ_HOME, 'export')
 print("[pathmanager] DATASET_DIR = %s" % DATASET_DIR)
-print("[pathmanager] COCO_DATALOAD_DIR = %s" % COCO_DATALOAD_DIR)
-print("[pathmanager] EXPORT_DIR = %s" % EXPORT_DIR)
+
