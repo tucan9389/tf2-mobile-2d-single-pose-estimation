@@ -1,5 +1,5 @@
 #tf-nightly-2.0-preview
-tensorflow==2.0.0-beta1
+tensorflow==2.1.0
 #tensorflow-gpu==2.0.0-alpha0
 cython
 mock
@@ -8,6 +8,7 @@ msgpack
 matplotlib
 pycocotools
 opencv-python
+IPython
 tensorpack
 six
 coremltools

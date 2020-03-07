@@ -16,7 +16,7 @@ from enum import Enum
 # custom addition for tf-tiny-pose-estimation
 from config.model_config import ModelConfig
 
-model_config = ModelConfig(setuplog_dir=None)
+model_config = ModelConfig()
 
 _network_w = int(model_config.input_size)
 _network_h = _network_w

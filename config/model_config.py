@@ -24,36 +24,13 @@ import json
 
 class ModelConfig(object):
 
-    def __init__(self, setuplog_dir):
+    def __init__(self):
         self.input_size = 128
         self.output_size = 32  # it will be changed later
 
         self.input_chnum = 3
         self.output_chnum = 14  # number of keypoints
         self.channel_num = 96
-
-        """
-        # pre-trained model list: https://keras.io/applications
-        # MobileNetV2, ResNet50,...
-        
-        'mnv2'      MobileNetV2     14 MB	0.713	0.901	3,538,984	88
-        'mn'        MobileNet       16 MB	0.704	0.895	4,253,864	88
-        'nnm'       NASNetMobile    23 MB	0.744	0.919	5,326,716	-
-        'dn121'     DenseNet121     33 MB	0.750	0.923	8,062,504	121
-        'dn169'     DenseNet169     57 MB	0.762	0.932	14,307,880	169
-        
-        'dn201'     DenseNet201     80 MB	0.773	0.936	20,242,984	201
-        'xp'        Xception        88 MB
-        'rnxt50'    ResNeXt50       96 MB	0.777	0.938	25,097,128	-
-        'ipv3'      InceptionV3     92 MB	0.779	0.937	23,851,784	159
-        'rn50'      ResNet50        98 MB	0.749	0.921	25,636,712	-
-        'rn50v2'    ResNet50V2      98 MB	0.760	0.930	25,613,800	-
-                
-        'rnxt101'   ResNeXt101      170 MB	0.787	0.943	44,315,560	-
-        'rn101'     ResNet101	    171 MB	0.764	0.928	44,707,176	-
-        'rn101v2'   ResNet101V2	    171 MB	0.772	0.938	44,675,560	-
-        """
-        self.base_model_name = 'mnv2'
         self.reception = RecepConfig()
         self.hourglass = HourglassConfig(channel_num=self.channel_num)
         self.output = OutputConfig()
@@ -66,41 +43,6 @@ class ModelConfig(object):
             {"filters": 64, "kernel_size": 4, "strides": (3, 3)},
             {"filters": 64, "kernel_size": 4, "strides": (2, 2)},
         ]
-        # self.output_size = 5
-        # for layer in self.decoder_layers:
-        #     w_stride, h_stride = layer["strides"]
-        #     self.output_size = self.output_size * w_stride
-        # print(self.output_size)
-
-        # for i in range(len(self.decoder_layers)):
-        #     if i == 0:
-        #         self.filter_name = str(self.decoder_layers[i]["filters"])
-        #     else:
-        #         self.filter_name = self.filter_name + "x" + str(self.decoder_layers[i]["filters"])
-
-        # model config logging
-        if setuplog_dir is not None:
-            self.model_config_dict = self.__dict__
-            self.reception_config_dict = self.reception.__dict__
-            self.hourglass_config_dict = self.hourglass.__dict__
-            self.output_config_dict = self.output.__dict__
-
-            model_config_filename = setuplog_dir + 'model_config.json'
-            reception_config_filename = setuplog_dir + 'recept_config.json'
-            hourglass_config_filename = setuplog_dir + 'hourglass_config.json'
-            output_config_filename = setuplog_dir + 'output_config.json'
-
-            # with open(model_config_filename,'w') as fp:
-            #     json.dump(str(self.model_config_dict), fp)
-            #
-            # with open(reception_config_filename,'w') as fp:
-            #     json.dump(str(self.reception_config_dict),fp)
-            #
-            # with open(hourglass_config_filename,'w') as fp:
-            #     json.dump(str(self.hourglass_config_dict),fp)
-            #
-            # with open(output_config_filename,'w') as fp:
-            #     json.dump(str(self.output_config_dict),fp)
 
 
 class RecepConfig(object):
