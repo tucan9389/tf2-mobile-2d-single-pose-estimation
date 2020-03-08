@@ -28,7 +28,7 @@ def get_bgimg(inp, target_size=None):
 
 # filepath: GOOGLEDRIVE_PATH/output_directory/{modeling_name}/result{index}-{step}.jpg
 # filepath: GOOGLEDRIVE_PATH/output_directory/{modeling_name}/result{20}-{14000}.jpg
-def save_result_image(filepath, inp_image, true_heat=None, pred_heat=None):
+def save_result_image(filepath, inp_image, true_heat=None, pred_heat=None, title=None):
     fig = plt.figure()
 
     if true_heat is not None:
@@ -48,4 +48,8 @@ def save_result_image(filepath, inp_image, true_heat=None, pred_heat=None):
 
         plt.colorbar()
 
+    if title is not None:
+        fig.suptitle(title, fontsize=14)
+
     fig.savefig(filepath)
+    fig.close()
