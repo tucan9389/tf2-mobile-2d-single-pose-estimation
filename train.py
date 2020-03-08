@@ -74,6 +74,8 @@ dataloader_valid = DataLoader(
     model_config=model_config,
     preproc_config=preproc_config)
 
+number_of_keypoints = dataloader_train.number_of_keypoints # 17
+
 # train dataset
 dataset_train = dataloader_train.input_fn()
 
@@ -89,7 +91,7 @@ val_images, val_heatmaps = dataloader_valid.get_images(0, batch_size=25) # from 
 from models.simplepose_coco import simplepose_resnet50b_coco as simpleposemodel
 
 # SimplePoseMobile
-model = simpleposemodel(keypoints=14)
+model = simpleposemodel(keypoints=number_of_keypoints)
 
 # model configuration
 model.return_heatmap = True
@@ -97,14 +99,14 @@ model.return_heatmap = True
 loss_object = tf.keras.losses.MeanSquaredError()
 optimizer = tf.keras.optimizers.Adam(0.001, epsilon=1e-8)
 train_loss = tf.keras.metrics.Mean(name="train_loss")
-test_loss = tf.keras.metrics.Mean(name="test_loss")
-test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_accuracy")
+valid_loss = tf.keras.metrics.Mean(name="valid_loss")
+valid_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="valid_accuracy")
 
 @tf.function
-def train_step(images, heatmaps):
+def train_step(images, labels):
     with tf.GradientTape() as tape:
         predictions = model(images)
-        loss = loss_object(heatmaps, predictions)
+        loss = loss_object(labels, predictions)
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
@@ -116,6 +118,14 @@ def val_step(step, images, heamaps):
     predictions = model(images)
     predictions = np.array(predictions)
     save_image_results(step, images, heamaps, predictions)
+
+@tf.function
+def valid_step(images, labels):
+    predictions = model(images)
+    v_loss = loss_object(labels, predictions)
+    valid_loss(v_loss)
+    # valid_accuracy(labels, predictions)
+    return v_loss
 
 def save_image_results(step, images, true_heatmaps, predicted_heatmaps):
     val_image_results_directory = "val_image_results"
@@ -166,6 +176,7 @@ step = 1
 number_of_echo_period = 100
 number_of_validimage_period = 1000
 number_of_modelsave_period = 2000
+valid_check = False
 
 
 
@@ -179,14 +190,11 @@ if __name__ == '__main__':
         for images, heatmaps in dataset_train:
 
             # print(images.shape)  # (32, 128, 128, 3)
-            # print(heatmaps.shape)  # (32, 32, 32, 14)
+            # print(heatmaps.shape)  # (32, 32, 32, 17)
             loss = train_step(images, heatmaps)
 
-            val_step(step, val_images, val_heatmaps)
-
-            exit(777)
-
             step += 1
+
             if step % number_of_echo_period == 0:
                 total_interval, per_step_interval = get_time_and_step_interval(step)
                 print(">> step: %d, total: %s, per_step: %s, loss: %.5f" % (step, total_interval, per_step_interval, loss))
@@ -197,5 +205,14 @@ if __name__ == '__main__':
 
             if step % number_of_modelsave_period == 0:
                 save_model(step=step)
+
+        # if not valid_check:
+        #     continue
+
+        # for v_images, v_heatmaps in dataloader_valid:
+        #     v_loss = valid_step(v_images, v_heatmaps)
+
+
+
 
     save_model(step=step, label="final")

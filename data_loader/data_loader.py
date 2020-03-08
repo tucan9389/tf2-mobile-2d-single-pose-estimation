@@ -69,6 +69,9 @@ class DataLoader(object):
 
         self.annotations_info = COCO(self.annotation_json_path)
 
+        number_of_keypoints = len(list(self.annotations_info.anns.values())[0]["keypoints"]) / 3
+        self.number_of_keypoints = int(number_of_keypoints)
+
         self.imgIds = self.annotations_info.getImgIds()
 
     def _set_shapes(self, img, heatmap):
@@ -83,7 +86,7 @@ class DataLoader(object):
         heatmap.set_shape([batch_size,
                            self.model_config.output_size,
                            self.model_config.output_size,
-                           self.model_config.output_chnum])
+                           self.number_of_keypoints])
         return img, heatmap
 
     def _parse_function(self, imgId, ann=None):
@@ -111,7 +114,8 @@ class DataLoader(object):
         img_meta_data = CocoMetadata(idx=image_id,
                                      img_path=image_filepath,
                                      img_meta=image_info,
-                                     annotations=keypoint_infos,
+                                     keypoint_infos=keypoint_infos,
+                                     number_of_heatmap=self.number_of_keypoints,
                                      sigma=self.preproc_config.heatmap_std)
 
         # print('joint_list = %s' % img_meta_data.joint_list)
