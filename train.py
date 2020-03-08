@@ -21,7 +21,6 @@ import datetime
 
 import tensorflow as tf
 
-from config.path_manager import DATASET_DIR
 from config.model_config import ModelConfig
 from config.train_config import PreprocessingConfig
 from config.train_config import TrainConfig
@@ -38,13 +37,15 @@ preproc_config = PreprocessingConfig()
 
 train_config.input_size = 256
 train_config.output_size = 64
+train_config.batch_size = 32
 
-dataset_name = DATASET_DIR.split("/")[-1]
+dataset_path = "/Volumes/tucan-SSD/datasets/coco_dataset" # "/Volumes/tucan-SSD/datasets/ai_challenger"
+dataset_name = dataset_path.split("/")[-1]
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
 output_model_name = "_sp-" + dataset_name
+output_path = "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
 output_name = current_time + output_model_name
 
-train_config.batch_size = 32
 
 # ================================================
 # ================= load dataset =================
@@ -53,21 +54,25 @@ train_config.batch_size = 32
 from data_loader.data_loader import DataLoader
 
 # dataloader instance gen
-train_dataset_path = os.path.join(DATASET_DIR, "train")
-print(">> LOAD TRAIN DATASET FORM", train_dataset_path)
+train_images_dir_path = os.path.join(dataset_path, "train2017")
+train_annotation_json_filepath = os.path.join(dataset_path, "annotations_trainval2017/person_keypoints_train2017.json")
+print(">> LOAD TRAIN DATASET FORM:", train_annotation_json_filepath)
 dataloader_train = DataLoader(
-        data_dir=train_dataset_path,
-        train_config=train_config,
-        model_config=model_config,
-        preproc_config=preproc_config)
+    images_dir_path=train_images_dir_path,
+    annotation_json_path=train_annotation_json_filepath,
+    train_config=train_config,
+    model_config=model_config,
+    preproc_config=preproc_config)
 
-valid_dataset_path = os.path.join(DATASET_DIR, "valid")
-print(">> LOAD VALID DATASET FORM", valid_dataset_path)
+valid_images_dir_path = os.path.join(dataset_path, "val2017")
+valid_annotation_json_filepath = os.path.join(dataset_path, "annotations_trainval2017/person_keypoints_val2017.json")
+print(">> LOAD VALID DATASET FORM:", valid_annotation_json_filepath)
 dataloader_valid = DataLoader(
-        data_dir=valid_dataset_path,
-        train_config=train_config,
-        model_config=model_config,
-        preproc_config=preproc_config)
+    images_dir_path=valid_images_dir_path,
+    annotation_json_path=valid_annotation_json_filepath,
+    train_config=train_config,
+    model_config=model_config,
+    preproc_config=preproc_config)
 
 # train dataset
 dataset_train = dataloader_train.input_fn()
@@ -107,9 +112,12 @@ def train_step(images, heatmaps):
 
 from save_result_as_image import save_result_image
 
-output_path = "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
+def val_step(step, images, heamaps):
+    predictions = model(images)
+    predictions = np.array(predictions)
+    save_image_results(step, images, heamaps, predictions)
 
-def val_step(step, images, heamaps, predictions):
+def save_image_results(step, images, true_heatmaps, predicted_heatmaps):
     val_image_results_directory = "val_image_results"
 
     if not os.path.exists(output_path):
@@ -121,12 +129,12 @@ def val_step(step, images, heamaps, predictions):
 
     for i in range(images.shape[0]):
         image = images[i, :, :, :]
-        heamap = heamaps[i, :, :, :]
-        prediction = predictions[i, :, :, :]
+        heamap = true_heatmaps[i, :, :, :]
+        prediction = predicted_heatmaps[i, :, :, :]
 
         # result_image = display(i, image, heamap, prediction)
         result_image_path = os.path.join(output_path, output_name, val_image_results_directory, "result%d-%d.jpg" % (i, step))
-        save_result_image(result_image_path, image, heamap, prediction)
+        save_result_image(result_image_path, image, heamap, prediction, title="step:%dk" % (step/1000))
         # print("val_step: save result image on \"" + result_image_path + "\"")
 
 def save_model(step=None, label=None):
@@ -167,12 +175,16 @@ if __name__ == '__main__':
     get_time_and_step_interval(step, is_init=True)
 
     for epoch in range(num_epochs):
-        print("-" * 4 + " " + str(epoch + 1) + " EPOCH " + "-" * 4)
+        print("-" * 10 + " " + str(epoch + 1) + " EPOCH " + "-" * 10)
         for images, heatmaps in dataset_train:
 
             # print(images.shape)  # (32, 128, 128, 3)
             # print(heatmaps.shape)  # (32, 32, 32, 14)
             loss = train_step(images, heatmaps)
+
+            val_step(step, val_images, val_heatmaps)
+
+            exit(777)
 
             step += 1
             if step % number_of_echo_period == 0:
@@ -181,9 +193,7 @@ if __name__ == '__main__':
 
             # validation phase
             if step % number_of_validimage_period == 0:
-                val_predictions = model(val_images)
-                val_predictions = np.array(val_predictions)
-                val_step(step, val_images, val_heatmaps, val_predictions)
+                val_step(step, val_images, val_heatmaps)
 
             if step % number_of_modelsave_period == 0:
                 save_model(step=step)

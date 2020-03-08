@@ -25,15 +25,11 @@ import sys
 import tensorflow as tf
 import os
 
-from config.path_manager import DATASET_DIR
 from pycocotools.coco import COCO
 
 # for coco dataset
 from data_loader import dataset_augment
 from data_loader.dataset_prepare import CocoMetadata
-
-sys.path.insert(0, DATASET_DIR)
-
 
 class DataLoader(object):
     """Generates DataSet input_fn for training or evaluation
@@ -47,31 +43,33 @@ class DataLoader(object):
     """
 
     def __init__(self,
-                 data_dir,
                  train_config,
                  model_config,
                  preproc_config,
+                 images_dir_path,
+                 annotation_json_path,
                  transpose_input=False,
                  use_bfloat16=False):
 
         self.image_preprocessing_fn = dataset_augment.preprocess_image
         self.use_bfloat16 = use_bfloat16
-        self.data_dir = data_dir
-        self.images_dir_path = os.path.join(data_dir, "images")
-        self.annotation_json_path = os.path.join(data_dir, "annotation.json")
-        self.anno = None
+        self.images_dir_path = images_dir_path
+        self.annotation_json_path = annotation_json_path
+        self.annotations_info = None
         self.train_config = train_config
         self.model_config = model_config
         self.preproc_config = preproc_config
 
-        if self.data_dir == 'null' or self.data_dir == '':
-            self.data_dir = None
+        if images_dir_path == 'null' or images_dir_path == '' or images_dir_path is None:
             exit(1)
+        if annotation_json_path == 'null' or annotation_json_path == '' or annotation_json_path is None:
+            exit(1)
+
         self.transpose_input = transpose_input
 
-        self.anno = COCO(self.annotation_json_path)
+        self.annotations_info = COCO(self.annotation_json_path)
 
-        self.imgIds = self.anno.getImgIds()
+        self.imgIds = self.annotations_info.getImgIds()
 
     def _set_shapes(self, img, heatmap):
 
@@ -100,31 +98,27 @@ class DataLoader(object):
             var = None
 
         if ann is not None:
-            self.anno = ann
+            self.annotations_info = ann
 
-        img_meta = self.anno.loadImgs([imgId])[0]
-        anno_ids = self.anno.getAnnIds(imgIds=imgId)
-        img_anno = self.anno.loadAnns(anno_ids)
-        idx = img_meta['id']
+        image_info = self.annotations_info.loadImgs([imgId])[0]
+        keypoint_info_ids = self.annotations_info.getAnnIds(imgIds=imgId)
+        keypoint_infos = self.annotations_info.loadAnns(keypoint_info_ids)
+        image_id = image_info['id']
 
-        img_filename = img_meta['file_name']
-        img_path = os.path.join(self.images_dir_path, img_filename)
+        img_filename = image_info['file_name']
+        image_filepath = os.path.join(self.images_dir_path, img_filename)
 
-        img_meta_data = CocoMetadata(idx=idx,
-                                     img_path=img_path,
-                                     img_meta=img_meta,
-                                     annotations=img_anno,
+        img_meta_data = CocoMetadata(idx=image_id,
+                                     img_path=image_filepath,
+                                     img_meta=image_info,
+                                     annotations=keypoint_infos,
                                      sigma=self.preproc_config.heatmap_std)
 
         # print('joint_list = %s' % img_meta_data.joint_list)
         images, labels = self.image_preprocessing_fn(img_meta_data=img_meta_data,
                                                      preproc_config=self.preproc_config)
-        # print(images)
-        # print(labels)
 
         return images, labels
-        # import numpy as np
-        # return np.array(images), np.array(labels)
 
     def input_fn(self, params=None):
         """Input function which provides a single batch for train or eval.
