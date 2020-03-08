@@ -70,11 +70,7 @@ tensorboard --logdir="./outputs/logs"
 
 ## Results
 
-### Loss
-![tensorboard-1-190403](resources/tensorboard_loss-190404.png)
-
-### Accuracy
-![tensorboard-1-190403](resources/tensorboard_accuracy-190404.png)
+> Preparing..
 
 ## Converting To Mobile Model
 
@@ -102,38 +98,53 @@ python convert_to_tflite.py
 ### Folder Structure
 
 ```
+tf2-mobile-pose-estimation
+├── config
+|   ├── model_config.py
+|   └── train_config.py
+├── data_loader
+|   ├── data_loader.py
+|   ├── dataset_augment.py
+|   ├── dataset_prepare.py
+|   └── pose_image_processor.py
+├── models
+|   ├── common.py
+|   ├── mobilenet.py
+|   ├── mobilenetv2.py
+|   ├── mobilenetv3.py
+|   ├── resnet.py
+|   ├── resneta.py
+|   ├── resnetd.py
+|   ├── senet.py
+|   ├── simplepose_coco.py
+|   └── simpleposemobile_coco.py
 ├── train.py            - the main script file
-├── data_loader.py      
-├── data_augment.py     
-├── data_prepare.py     
-├── hourglass_model.py  
-├── model_config.py     
-├── network_base.py     
-├── path_manage.py      
-├── train_config.py     
-├── requirements.txt    
+├── common.py 
+└── requirements.txt
+
+My SSD    
 ├── datasets            - this folder contain the datasets of the project.
 |   └── ai_challenger
-|       ├── ai_challenger_train.json
-|       ├── ai_challenger_valid.json
+|       ├── train.json
+|       ├── valid.json
 |       ├── train
 |       └── valid
 └── outputs             - this folder will be generated automatically when start training
-    ├── models
-    └── logs
+    ├── 20200312-sp-ai_challenger
+    |   ├── saved_model
+    |   └── image_results
+    └── 20200312-sp-ai_challenger
+        └── ...
 ```
 
 ## TODO
 
-- ~~Save model(`.hdf5` or `.ckpt`)~~
-- ~~Convert the model(`.hdf5` or `.ckpt`) to TFLite model(`.tflite`)~~
-- Convert the model(`.hdf5` or `.ckpt`) to Core ML model(`.mlmodel`)
+- ~~Save model to saved_model~~
+- Convert the model(saved_model) to TFLite model(`.tflite`)
+- Convert the model(saved_model) to Core ML model(`.mlmodel`)
 - Run the model on Android
 - Run the model on iOS
 - Make DEMO gif running on mobile device
-
-## Acknowledgements
-This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) and [jwkanggist/tf-tiny-pose-estimation](https://github.com/jwkanggist/tf-tiny-pose-estimation).
 
 ## Reference
 
@@ -148,6 +159,7 @@ This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/
 ### Related Projects
 - [tucan9389/PoseEstimation-CoreML](https://github.com/tucan9389/PoseEstimation-CoreML)
 - [tucan9389/KeypointAnnotation](https://github.com/tucan9389/KeypointAnnotation)
+- [osmr/imgclsmob](https://github.com/osmr/imgclsmob)
 - [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile)
 - [jwkanggist/tf-tiny-pose-estimation](https://github.com/jwkanggist/tf-tiny-pose-estimatio)
 - [dongseokYang/Body-Pose-Estimation-Android-gpu](https://github.com/dongseokYang/Body-Pose-Estimation-Android-gpu)
