@@ -2,7 +2,7 @@
 > ~~This repository is forked from [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) when the original repository was closed.~~ <br>[edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) repository is reopened! I'll maintain it separately. 👍
 
 
-This repository currently implemented the Hourglass model using TensorFlow 2.0 (and Keras API). Instead of normal convolution, inverted residuals (also known as Mobilenet V2) module has been used inside the model for **real-time** inference.
+This repository currently implemented the Hourglass model using TensorFlow 2.0 with Keras API.
 
 ## Table of contents
 
@@ -58,14 +58,10 @@ pip install -r requirements.txt
 ## Run The Project
 
 In order to use the project you have to:
-1. Prepare the dataset([ai_challenger dataset](https://drive.google.com/open?id=1zahjQWhuKIYWRRI2ZlHzn65Ug_jIiC4l)) and locate the dataset on `./datasets`.
+1. Prepare the dataset([ai_challenger dataset](https://drive.google.com/file/d/1rZng2KiEuyb-dev3HxJFYcZU4Il1VHqj/view?usp=sharing)) and unzip.
 2. Run the model using:
 ```shell
 python train.py
-```
-3. Monitoring with TensorBoard:
-```shell
-tensorboard --logdir="./outputs/logs"
 ```
 
 ## Results
@@ -76,19 +72,11 @@ tensorboard --logdir="./outputs/logs"
 
 ### TensorFLow Lite
 
-1. Prepare the trained model(`.hdf5`) from section below [Run The Project](#run-the-project)
-2. Modify `trained_model_file_name` variable in `convert_to_tflite.py` to your own trained model.
-```python
-trained_model_file_name = "{model_file_name}.hdf5"
-```
-3. Run the `convert_to_tflite.py`:
-```shell
-python convert_to_tflite.py
-```
-4. And then, you can find the `.tflite` model on `{PROJECT_PATH}/outputs/models/tflite/{model_file_name}.tflite`.
+> Preparing...
 
-### Core ML (Preparing...)
+### Core ML
 
+> Preparing...
 > Related issue: [https://github.com/tucan9389/tf2-mobile-pose-estimation/issues/13](https://github.com/tucan9389/tf2-mobile-pose-estimation/issues/13)
 
 ## Details
@@ -169,6 +157,7 @@ My SSD
 - [cbsudux/awesome-human-pose-estimation](https://github.com/cbsudux/awesome-human-pose-estimation)
 
 ## Contributing
+
 > This section will be separated to other `.md` file.
 
 Any contributions are welcome including improving the project.
