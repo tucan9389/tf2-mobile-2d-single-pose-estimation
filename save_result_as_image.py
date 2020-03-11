@@ -52,4 +52,3 @@ def save_result_image(filepath, inp_image, true_heat=None, pred_heat=None, title
         fig.suptitle(title, fontsize=14)
 
     fig.savefig(filepath)
-    fig.close()
