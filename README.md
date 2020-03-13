@@ -146,6 +146,7 @@ My SSD
 
 ### Related Projects
 - [tucan9389/PoseEstimation-CoreML](https://github.com/tucan9389/PoseEstimation-CoreML)
+- [tucan9389/PoseEstimation-TFLiteSwift](https://github.com/tucan9389/PoseEstimation-TFLiteSwift) (Preparing...)
 - [tucan9389/KeypointAnnotation](https://github.com/tucan9389/KeypointAnnotation)
 - [osmr/imgclsmob](https://github.com/osmr/imgclsmob)
 - [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile)
