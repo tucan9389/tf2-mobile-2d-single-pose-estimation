@@ -37,7 +37,7 @@ test_run = "--test-run" in argv
 
 disk_info = psutil.disk_usage("/")
 
-recommended_space_in_gb = 36
+recommended_space_in_gb = 40
 
 download_path = "/home/datasets/"
 
