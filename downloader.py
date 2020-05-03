@@ -253,6 +253,12 @@ Please check it for yourself"""
           )
 
       log("Unpack successfull!")
+
+      log("Removing archive file...")
+
+      Path(filepath).unlink()
+
+      log("Archive file removed!")
     except Exception as e:
       if debug:
         traceback.print_exc()
