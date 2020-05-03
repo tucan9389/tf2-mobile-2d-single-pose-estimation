@@ -33,6 +33,8 @@ def sleep(*args):
 
 debug = "--debug" in argv
 
+test_run = "--test-run" in argv
+
 disk_info = psutil.disk_usage("/")
 
 recommended_space_in_gb = 36
@@ -66,22 +68,21 @@ free_space_in_gb = int((disk_info.free / (2**30)))
 if free_space_in_gb < recommended_space_in_gb:
   log("*** WARNING ***")
   log("You have less than required free space in your system.")
-  log(f"Your free space in system for / path: {free_space_in_gb} GB")
+  log(f"Your free space in system for / path: {free_space_in_gb} GB. Recommended free space: {recommended_space_in_gb} GB")
   log("*** WARNING ***")
   r = input(
-    str_to_log("If you are sure that this is some kind of mistake and wish to proceed, please enter YES or Y: ")
+    str_to_log("If you are sure that this is some kind of mistake and wish to proceed, please enter PROCEED: ")
   )
 
-  if "Y" not in r and "YES" not in r:
+  if "PROCEED" not in r:
     log("Aborting")
-    sleep(1)
     sys.exit(0)
 else:
   log(f"It seems you have recommended amount of free space for datasets. RECOMMENDED: {recommended_space_in_gb} GB. YOUR SPACE: {free_space_in_gb} GB. Proceeding...")
 
 
 r = input(
-  str_to_log(f"You are about to download huge datasets into your system. One of the archives is 18GB. Are you sure? [Y/n]: ")
+  str_to_log(f"You are about to download huge datasets into your system. One of the archives is 18GB. Are you sure? [y/N]: ")
 )
 
 positive = ["yes", "y"]
@@ -232,6 +233,8 @@ Please choose how should I proceed by typing NUMBER of preferred option:
       return
 
     log("Download success! Going to unpack archive")
+    log("*** UNPACKING ***")
+    log("Please wait while archive is being unpacked. You won't see any progress until unpack is done because it is done in silent mode, not to clutter output with list of files")
 
     unpack_command = self.create_unpack_command()
 
@@ -248,19 +251,24 @@ Folder with inner files not created after unpacking!
 There should be folder: {directory_path} after unpacking, but it's not there!
 Please check it for yourself"""
           )
+
+      log("Unpack successfull!")
     except Exception as e:
       if debug:
         traceback.print_exc()
       log("ERROR unpacking! Skipping... Please use --debug to show error")
       return
 
-
-download_requests = [
-  DownloadRequest("annotations_trainval2017", "http://images.cocodataset.org/annotations/stuff_annotations_trainval2017.zip", download_path),
-#  DownloadRequest("zipTest", "https://github.com/marmelroy/Zip/blob/master/examples/Sample/Sample/Images.zip?raw=true", download_path, check_for_unpacking_folder=False)
-  DownloadRequest("val2017", "http://images.cocodataset.org/zips/val2017.zip", download_path),
-  DownloadRequest("train2017", "http://images.cocodataset.org/zips/train2017.zip", download_path),
-]
+if test_run:
+  download_requests = [
+    DownloadRequest("zipTest", "https://github.com/marmelroy/Zip/blob/master/examples/Sample/Sample/Images.zip?raw=true", download_path, check_for_unpacking_folder=False)
+  ]
+else:
+  download_requests = [
+    DownloadRequest("annotations_trainval2017", "http://images.cocodataset.org/annotations/stuff_annotations_trainval2017.zip", download_path),
+    DownloadRequest("val2017", "http://images.cocodataset.org/zips/val2017.zip", download_path),
+    DownloadRequest("train2017", "http://images.cocodataset.org/zips/train2017.zip", download_path),
+  ]
 
 log("Checking path for downloading...")
 
@@ -288,6 +296,8 @@ for dr in download_requests:
   
   dr.download()
   
+log("")
+log("")
 log("*** SUCCESS ***")
 log("All datasets downloads complete!")
 log("*** SUCCESS ***")
