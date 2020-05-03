@@ -268,7 +268,7 @@ if not Path(download_path).exists():
   log(f"Path {download_path} does not exist! Creating it...")
 
   try:
-    Path(download_path).mkdir()
+    Path(download_path).mkdir(parents=True)
   except Exception as e:
     if debug:
       traceback.print_exc()
