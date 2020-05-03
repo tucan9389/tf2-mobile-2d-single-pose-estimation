@@ -275,7 +275,7 @@ if not Path(download_path).exists():
     log("Critical error creating path! Aborting. (more info with --debug option)")
     sys.exit(0)
 else:
-  log("Path seems to bi ok!")
+  log("Path seems to be ok!")
 
 log("Going to download needed datasets!")
 sleep(1)
