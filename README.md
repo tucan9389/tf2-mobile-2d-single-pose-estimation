@@ -55,6 +55,19 @@ cd {tf2-mobile-pose-estimation_path}
 pip install -r requirements.txt
 ```
 
+### Download COCO dataset.
+
+Special script that will help you to download and unpack
+needed COCO datasets. Please fill COCO_DATASET_PATH with path
+that is used in current version of repository.
+You can check needed path in file train.py
+
+**Warning** Your system should have approximately 40gb of free space for datasets
+
+```shell
+python downloader.py --download-path=COCO_DATASET_PATH
+```
+
 ## Run The Project
 
 In order to use the project you have to:

@@ -12,3 +12,4 @@ IPython
 tensorpack
 six
 coremltools
+psutil
