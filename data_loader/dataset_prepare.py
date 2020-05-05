@@ -13,7 +13,6 @@ import math
 
 
 class CocoMetadata:
-    __coco_parts = 14
 
     @staticmethod
     def parse_float(four_np):
@@ -25,20 +24,21 @@ class CocoMetadata:
         assert len(four_nps) % 4 == 0
         return [(CocoMetadata.parse_float(four_nps[x * 4:x * 4 + 4]) + adjust) for x in range(len(four_nps) // 4)]
 
-    def __init__(self, idx, img_path, img_meta, annotations, sigma):
+    def __init__(self, idx, img_path, img_meta, keypoint_infos, number_of_heatmap, sigma):
         self.idx = idx
         self.img = self.read_image(img_path)
         self.sigma = sigma
 
         self.height = int(img_meta['height'])
         self.width = int(img_meta['width'])
+        self.number_of_heatmap = number_of_heatmap
 
         joint_list = []
-        for ann in annotations:
-            if ann.get('num_keypoints', 0) == 0:
+        for keypoint_info in keypoint_infos:
+            if keypoint_info.get('num_keypoints', 0) == 0:
                 continue
 
-            kp = np.array(ann['keypoints'])
+            kp = np.array(keypoint_info['keypoints'])
             xs = kp[0::3]
             ys = kp[1::3]
             vs = kp[2::3]
@@ -66,7 +66,7 @@ class CocoMetadata:
 
     def get_heatmap(self, target_size):
 
-        heatmap = np.zeros((CocoMetadata.__coco_parts, self.height, self.width), dtype=np.float32)
+        heatmap = np.zeros((self.number_of_heatmap, self.height, self.width), dtype=np.float32)
 
         for joints in self.joint_list:
             for idx, point in enumerate(joints):

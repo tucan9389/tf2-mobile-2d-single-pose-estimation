@@ -20,8 +20,8 @@ from __future__ import print_function
 import tensorflow as tf
 # import keras
 from datetime import datetime
-from config.path_manager import EXPORT_DIR
-from config.path_manager import LOCAL_LOG_DIR
+# from config.path_manager import EXPORT_DIR
+# from config.path_manager import LOCAL_LOG_DIR
 from subprocess import check_output
 
 
@@ -59,22 +59,22 @@ class TrainConfig(object):
         # tensorboard config
         now = datetime.utcnow().strftime("%Y%m%d%H%M%S")
 
-        self.root_logdir = EXPORT_DIR
-        self.local_logdir = LOCAL_LOG_DIR
+        # self.root_logdir = EXPORT_DIR
+        # self.local_logdir = LOCAL_LOG_DIR
         self.is_summary_heatmap = True
 
-        self.tflogdir = "{}/run-{}/".format(self.root_logdir + '/tf_logs', now)
-        self.ckpt_dir = self.tflogdir + 'pb_and_ckpt/'
+        # self.tflogdir = "{}/run-{}/".format(self.root_logdir + '/tf_logs', now)
+        # self.ckpt_dir = self.tflogdir + 'pb_and_ckpt/'
 
-        self.setuplog_dir = "{}/run-{}/".format(self.local_logdir + '/train_setup_log', now)
+        # self.setuplog_dir = "{}/run-{}/".format(self.local_logdir + '/train_setup_log', now)
 
-        print('[train_config] tflog    dir = %s' % self.tflogdir)
-        print('[train_config] setuplog dir = %s' % self.setuplog_dir)
+        # print('[train_config] tflog    dir = %s' % self.tflogdir)
+        # print('[train_config] setuplog dir = %s' % self.setuplog_dir)
         self.train_config_dict = self.__dict__
 
         # if not tf.gfile.Exists(self.setuplog_dir):
         #     tf.gfile.MakeDirs(self.setuplog_dir)
-        train_config_filename = self.setuplog_dir + 'train_config.json'
+        # train_config_filename = self.setuplog_dir + 'train_config.json'
 
         # with open(train_config_filename,'w') as fp:
         #     json.dump(str(self.train_config_dict),fp)
@@ -93,7 +93,7 @@ class TrainConfig(object):
 
 class PreprocessingConfig(object):
 
-    def __init__(self, setuplog_dir):
+    def __init__(self):
         # image pre-processing
         self.is_crop = True
         self.is_rotate = True
@@ -115,12 +115,12 @@ class PreprocessingConfig(object):
         self.MEAN_RGB = [0.485, 0.456, 0.406]
         self.STDDEV_RGB = [0.229, 0.224, 0.225]
 
-        if setuplog_dir is not None:
-            preproc_config_dict = self.__dict__
-            preproc_config_filename = setuplog_dir + 'preproc_config.json'
-
-            # with open(preproc_config_filename,'w') as fp:
-            #     json.dump(str(preproc_config_dict),fp)
+        # if setuplog_dir is not None:
+        #     preproc_config_dict = self.__dict__
+        #     preproc_config_filename = setuplog_dir + 'preproc_config.json'
+        #
+        #     # with open(preproc_config_filename,'w') as fp:
+        #     #     json.dump(str(preproc_config_dict),fp)
 
     def show_info(self):
         # tf.logging.info('------------------------')

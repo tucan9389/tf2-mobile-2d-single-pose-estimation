@@ -2,7 +2,7 @@
 > ~~This repository is forked from [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) when the original repository was closed.~~ <br>[edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) repository is reopened! I'll maintain it separately. 👍
 
 
-This repository currently implemented the Hourglass model using TensorFlow 2.0 (and Keras API). Instead of normal convolution, inverted residuals (also known as Mobilenet V2) module has been used inside the model for **real-time** inference.
+This repository currently implemented the Hourglass model using TensorFlow 2.0 with Keras API.
 
 ## Table of contents
 
@@ -55,44 +55,41 @@ cd {tf2-mobile-pose-estimation_path}
 pip install -r requirements.txt
 ```
 
+### Download COCO dataset.
+
+Special script that will help you to download and unpack
+needed COCO datasets. Please fill COCO_DATASET_PATH with path
+that is used in current version of repository.
+You can check needed path in file train.py
+
+**Warning** Your system should have approximately 40gb of free space for datasets
+
+```shell
+python downloader.py --download-path=COCO_DATASET_PATH
+```
+
 ## Run The Project
 
 In order to use the project you have to:
-1. Prepare the dataset([ai_challenger dataset](https://drive.google.com/open?id=1zahjQWhuKIYWRRI2ZlHzn65Ug_jIiC4l)) and locate the dataset on `./datasets`.
+1. Prepare the dataset([ai_challenger dataset](https://drive.google.com/file/d/1rZng2KiEuyb-dev3HxJFYcZU4Il1VHqj/view?usp=sharing)) and unzip.
 2. Run the model using:
 ```shell
 python train.py
 ```
-3. Monitoring with TensorBoard:
-```shell
-tensorboard --logdir="./outputs/logs"
-```
 
 ## Results
 
-### Loss
-![tensorboard-1-190403](resources/tensorboard_loss-190404.png)
-
-### Accuracy
-![tensorboard-1-190403](resources/tensorboard_accuracy-190404.png)
+> Preparing..
 
 ## Converting To Mobile Model
 
 ### TensorFLow Lite
 
-1. Prepare the trained model(`.hdf5`) from section below [Run The Project](#run-the-project)
-2. Modify `trained_model_file_name` variable in `convert_to_tflite.py` to your own trained model.
-```python
-trained_model_file_name = "{model_file_name}.hdf5"
-```
-3. Run the `convert_to_tflite.py`:
-```shell
-python convert_to_tflite.py
-```
-4. And then, you can find the `.tflite` model on `{PROJECT_PATH}/outputs/models/tflite/{model_file_name}.tflite`.
+> Preparing...
 
-### Core ML (Preparing...)
+### Core ML
 
+> Preparing...
 > Related issue: [https://github.com/tucan9389/tf2-mobile-pose-estimation/issues/13](https://github.com/tucan9389/tf2-mobile-pose-estimation/issues/13)
 
 ## Details
@@ -102,38 +99,53 @@ python convert_to_tflite.py
 ### Folder Structure
 
 ```
+tf2-mobile-pose-estimation
+├── config
+|   ├── model_config.py
+|   └── train_config.py
+├── data_loader
+|   ├── data_loader.py
+|   ├── dataset_augment.py
+|   ├── dataset_prepare.py
+|   └── pose_image_processor.py
+├── models
+|   ├── common.py
+|   ├── mobilenet.py
+|   ├── mobilenetv2.py
+|   ├── mobilenetv3.py
+|   ├── resnet.py
+|   ├── resneta.py
+|   ├── resnetd.py
+|   ├── senet.py
+|   ├── simplepose_coco.py
+|   └── simpleposemobile_coco.py
 ├── train.py            - the main script file
-├── data_loader.py      
-├── data_augment.py     
-├── data_prepare.py     
-├── hourglass_model.py  
-├── model_config.py     
-├── network_base.py     
-├── path_manage.py      
-├── train_config.py     
-├── requirements.txt    
+├── common.py 
+└── requirements.txt
+
+My SSD    
 ├── datasets            - this folder contain the datasets of the project.
 |   └── ai_challenger
-|       ├── ai_challenger_train.json
-|       ├── ai_challenger_valid.json
+|       ├── train.json
+|       ├── valid.json
 |       ├── train
 |       └── valid
 └── outputs             - this folder will be generated automatically when start training
-    ├── models
-    └── logs
+    ├── 20200312-sp-ai_challenger
+    |   ├── saved_model
+    |   └── image_results
+    └── 20200312-sp-ai_challenger
+        └── ...
 ```
 
 ## TODO
 
-- ~~Save model(`.hdf5` or `.ckpt`)~~
-- ~~Convert the model(`.hdf5` or `.ckpt`) to TFLite model(`.tflite`)~~
-- Convert the model(`.hdf5` or `.ckpt`) to Core ML model(`.mlmodel`)
+- ~~Save model to saved_model~~
+- Convert the model(saved_model) to TFLite model(`.tflite`)
+- Convert the model(saved_model) to Core ML model(`.mlmodel`)
 - Run the model on Android
 - Run the model on iOS
 - Make DEMO gif running on mobile device
-
-## Acknowledgements
-This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) and [jwkanggist/tf-tiny-pose-estimation](https://github.com/jwkanggist/tf-tiny-pose-estimation).
 
 ## Reference
 
@@ -147,7 +159,9 @@ This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/
 
 ### Related Projects
 - [tucan9389/PoseEstimation-CoreML](https://github.com/tucan9389/PoseEstimation-CoreML)
+- [tucan9389/PoseEstimation-TFLiteSwift](https://github.com/tucan9389/PoseEstimation-TFLiteSwift) (Preparing...)
 - [tucan9389/KeypointAnnotation](https://github.com/tucan9389/KeypointAnnotation)
+- [osmr/imgclsmob](https://github.com/osmr/imgclsmob)
 - [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile)
 - [jwkanggist/tf-tiny-pose-estimation](https://github.com/jwkanggist/tf-tiny-pose-estimatio)
 - [dongseokYang/Body-Pose-Estimation-Android-gpu](https://github.com/dongseokYang/Body-Pose-Estimation-Android-gpu)
@@ -157,6 +171,7 @@ This project is based on [edvardHua/PoseEstimationForMobile](https://github.com/
 - [cbsudux/awesome-human-pose-estimation](https://github.com/cbsudux/awesome-human-pose-estimation)
 
 ## Contributing
+
 > This section will be separated to other `.md` file.
 
 Any contributions are welcome including improving the project.

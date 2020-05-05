@@ -23,17 +23,13 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 import tensorflow as tf
-from os.path import join
+import os
 
-from config.path_manager import DATASET_DIR
 from pycocotools.coco import COCO
 
 # for coco dataset
 from data_loader import dataset_augment
 from data_loader.dataset_prepare import CocoMetadata
-
-sys.path.insert(0, DATASET_DIR)
-
 
 class DataLoader(object):
     """Generates DataSet input_fn for training or evaluation
@@ -46,38 +42,37 @@ class DataLoader(object):
             transpose_input: 'bool' for whether to use the double transpose trick
     """
 
-    def __init__(self, is_training,
-                 data_dir,
-                 use_bfloat16,
+    def __init__(self,
                  train_config,
                  model_config,
                  preproc_config,
-                 transpose_input=True):
+                 images_dir_path,
+                 annotation_json_path,
+                 transpose_input=False,
+                 use_bfloat16=False):
 
         self.image_preprocessing_fn = dataset_augment.preprocess_image
-        self.is_training = is_training
         self.use_bfloat16 = use_bfloat16
-        self.data_dir = data_dir
-        self.anno = None
+        self.images_dir_path = images_dir_path
+        self.annotation_json_path = annotation_json_path
+        self.annotations_info = None
         self.train_config = train_config
         self.model_config = model_config
         self.preproc_config = preproc_config
 
-        if self.data_dir == 'null' or self.data_dir == '':
-            self.data_dir = None
+        if images_dir_path == 'null' or images_dir_path == '' or images_dir_path is None:
+            exit(1)
+        if annotation_json_path == 'null' or annotation_json_path == '' or annotation_json_path is None:
+            exit(1)
+
         self.transpose_input = transpose_input
 
-        json_filename_split = data_dir.split('/')
-        if self.is_training:
-            json_filename = json_filename_split[-1] + '_train.json'
-        else:
-            json_filename = json_filename_split[-1] + '_valid.json'
+        self.annotations_info = COCO(self.annotation_json_path)
 
-        # tf.logging.info('json loading from %s' % json_filename)
-        dataset_path = join(data_dir, json_filename)
-        self.anno = COCO(dataset_path)
+        number_of_keypoints = len(list(self.annotations_info.anns.values())[0]["keypoints"]) / 3
+        self.number_of_keypoints = int(number_of_keypoints)
 
-        self.imgIds = self.anno.getImgIds()
+        self.imgIds = self.annotations_info.getImgIds()
 
     def _set_shapes(self, img, heatmap):
 
@@ -91,7 +86,7 @@ class DataLoader(object):
         heatmap.set_shape([batch_size,
                            self.model_config.output_size,
                            self.model_config.output_size,
-                           self.model_config.output_chnum])
+                           self.number_of_keypoints])
         return img, heatmap
 
     def _parse_function(self, imgId, ann=None):
@@ -106,33 +101,28 @@ class DataLoader(object):
             var = None
 
         if ann is not None:
-            self.anno = ann
+            self.annotations_info = ann
 
-        img_meta = self.anno.loadImgs([imgId])[0]
-        anno_ids = self.anno.getAnnIds(imgIds=imgId)
-        img_anno = self.anno.loadAnns(anno_ids)
-        idx = img_meta['id']
+        image_info = self.annotations_info.loadImgs([imgId])[0]
+        keypoint_info_ids = self.annotations_info.getAnnIds(imgIds=imgId)
+        keypoint_infos = self.annotations_info.loadAnns(keypoint_info_ids)
+        image_id = image_info['id']
 
-        filename_item_list = img_meta['file_name'].split('/')
-        filename = filename_item_list[1] + '/' + filename_item_list[2]
+        img_filename = image_info['file_name']
+        image_filepath = os.path.join(self.images_dir_path, img_filename)
 
-        img_path = join(self.data_dir, filename)
-
-        img_meta_data = CocoMetadata(idx=idx,
-                                     img_path=img_path,
-                                     img_meta=img_meta,
-                                     annotations=img_anno,
+        img_meta_data = CocoMetadata(idx=image_id,
+                                     img_path=image_filepath,
+                                     img_meta=image_info,
+                                     keypoint_infos=keypoint_infos,
+                                     number_of_heatmap=self.number_of_keypoints,
                                      sigma=self.preproc_config.heatmap_std)
 
         # print('joint_list = %s' % img_meta_data.joint_list)
         images, labels = self.image_preprocessing_fn(img_meta_data=img_meta_data,
                                                      preproc_config=self.preproc_config)
-        # print(images)
-        # print(labels)
 
         return images, labels
-        # import numpy as np
-        # return np.array(images), np.array(labels)
 
     def input_fn(self, params=None):
         """Input function which provides a single batch for train or eval.
@@ -144,34 +134,8 @@ class DataLoader(object):
                 A `tf.data.Dataset` object.
             doc reference: https://www.tensorflow.org/api_docs/python/tf/data/TFRecordDataset
         """
-        # tf.logging.info('[Input_fn]------------------------------------')
-        # tf.logging.info('[Input_fn] is_training = %s' % self.is_training)
 
-        # json_filename_split = DATASET_DIR.split('/')
-        # if self.is_training:
-        #     json_filename       = json_filename_split[-1] + '_train.json'
-        # else:
-        #     json_filename       = json_filename_split[-1] + '_valid.json'
-        #
-        # # tf.logging.info('json loading from %s' % json_filename)
-        # dataset_path = join(DATASET_DIR, json_filename)
-        # self.anno      = COCO(dataset_path)
-        #
-        # imgIds          = self.anno.getImgIds()
         dataset = tf.data.Dataset.from_tensor_slices(self.imgIds)
-
-        # if self.is_training:
-        #     # tf.logging.info('[Input_fn] dataset shuffled and repeated.')
-        #     dataset = dataset.apply(tf.data.experimental.shuffle_and_repeat(buffer_size=self.train_config.py.shuffle_size,
-        #                                                                 count=None))
-        # else:
-        #     # tf.logging.info('[Input_fn] dataset repeated only.')
-        #     dataset = dataset.repeat(count=None)
-
-        # # Read the data from disk in parallel
-        # where cycle_length is the Number of training files to read in parallel.
-        # multiprocessing_num === < the number of CPU cores >
-
         dataset = dataset.apply(tf.data.experimental.map_and_batch(
             map_func=lambda imgId: tuple(
                 tf.py_function(
@@ -202,6 +166,5 @@ class DataLoader(object):
             img, label = self._parse_function(self.imgIds[i + idx])
             imgs.append(img)
             labels.append(label)
-        # imgs, labels = self._parse_function(imgIds[idx:idx + batch_size])
         import numpy as np
         return np.array(imgs), np.array(labels)
