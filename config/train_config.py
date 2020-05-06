@@ -95,10 +95,10 @@ class PreprocessingConfig(object):
 
     def __init__(self):
         # image pre-processing
-        self.is_crop = True
+        self.is_crop = False
         self.is_rotate = True
-        self.is_flipping = True
-        self.is_scale = True
+        self.is_flipping = False
+        self.is_scale = False
         self.is_resize_shortest_edge = True
 
         # this is when classification task
@@ -108,8 +108,8 @@ class PreprocessingConfig(object):
         # for ground true heatmap generation
         self.heatmap_std = 5.0
 
-        self.MIN_AUGMENT_ROTATE_ANGLE_DEG = -15.0
-        self.MAX_AUGMENT_ROTATE_ANGLE_DEG = 15.0
+        self.MIN_AUGMENT_ROTATE_ANGLE_DEG = -1.0
+        self.MAX_AUGMENT_ROTATE_ANGLE_DEG = 1.0
 
         # For normalize the image to zero mean and unit variance.
         self.MEAN_RGB = [0.485, 0.456, 0.406]

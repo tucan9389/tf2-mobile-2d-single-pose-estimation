@@ -29,7 +29,7 @@ class ModelConfig(object):
         self.output_size = 32  # it will be changed later
 
         self.input_chnum = 3
-        self.output_chnum = 14  # number of keypoints
+        self.output_chnum = 4  # number of keypoints
         self.channel_num = 96
         self.reception = RecepConfig()
         self.hourglass = HourglassConfig(channel_num=self.channel_num)

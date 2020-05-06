@@ -39,11 +39,11 @@ train_config.input_size = 256
 train_config.output_size = 64
 train_config.batch_size = 32
 
-dataset_path = "/Volumes/tucan-SSD/datasets/coco_dataset" # "/Volumes/tucan-SSD/datasets/ai_challenger"
+dataset_path = "/Users/user/Downloads/receipt_annotations/receipt_top_bottom_kp4_8795"  # "/Volumes/tucan-SSD/datasets/coco_dataset" # "/Volumes/tucan-SSD/datasets/ai_challenger"
 dataset_name = dataset_path.split("/")[-1]
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
 output_model_name = "_sp-" + dataset_name
-output_path = "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
+output_path = "/Users/user/Project/ml-project/receipt/pose/outputs"
 output_name = current_time + output_model_name
 
 
@@ -54,8 +54,8 @@ output_name = current_time + output_model_name
 from data_loader.data_loader import DataLoader
 
 # dataloader instance gen
-train_images_dir_path = os.path.join(dataset_path, "train2017")
-train_annotation_json_filepath = os.path.join(dataset_path, "annotations_trainval2017/person_keypoints_train2017.json")
+train_images_dir_path = os.path.join(dataset_path, "train/images")
+train_annotation_json_filepath = os.path.join(dataset_path, "train/annotations.json")
 print(">> LOAD TRAIN DATASET FORM:", train_annotation_json_filepath)
 dataloader_train = DataLoader(
     images_dir_path=train_images_dir_path,
@@ -64,8 +64,8 @@ dataloader_train = DataLoader(
     model_config=model_config,
     preproc_config=preproc_config)
 
-valid_images_dir_path = os.path.join(dataset_path, "val2017")
-valid_annotation_json_filepath = os.path.join(dataset_path, "annotations_trainval2017/person_keypoints_val2017.json")
+valid_images_dir_path = os.path.join(dataset_path, "valid/images")
+valid_annotation_json_filepath = os.path.join(dataset_path, "valid/annotations.json")
 print(">> LOAD VALID DATASET FORM:", valid_annotation_json_filepath)
 dataloader_valid = DataLoader(
     images_dir_path=valid_images_dir_path,
@@ -74,13 +74,13 @@ dataloader_valid = DataLoader(
     model_config=model_config,
     preproc_config=preproc_config)
 
-number_of_keypoints = dataloader_train.number_of_keypoints # 17
+number_of_keypoints = dataloader_train.number_of_keypoints # 4
 
 # train dataset
 dataset_train = dataloader_train.input_fn()
 
 # validation images
-val_images, val_heatmaps = dataloader_valid.get_images(0, batch_size=25) # from 22 index 6 images and 6 labels
+val_images, val_heatmaps = dataloader_valid.get_images(0, batch_size=25)  # from 22 index 6 images and 6 labels
 
 # ================================================
 # ============== configure model =================
@@ -173,9 +173,9 @@ def save_model(step=None, label=None):
 
 num_epochs = 1000
 step = 1
-number_of_echo_period = 100
-number_of_validimage_period = 1000
-number_of_modelsave_period = 2000
+number_of_echo_period = 2
+number_of_validimage_period = 4
+number_of_modelsave_period = 10
 valid_check = False
 
 

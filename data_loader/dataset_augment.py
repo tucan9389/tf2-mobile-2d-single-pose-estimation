@@ -24,22 +24,10 @@ _scale = int(model_config.input_size / model_config.output_size)
 
 
 class CocoPart(Enum):
-    Top = 0
-    Neck = 1
-    RShoulder = 2
-    RElbow = 3
-    RWrist = 4
-    LShoulder = 5
-    LElbow = 6
-    LWrist = 7
-    RHip = 8
-    RKnee = 9
-    RAnkle = 10
-    LHip = 11
-    LKnee = 12
-    LAnkle = 13
-    Background = 14  # Background is not used
-
+    TopLeft = 0
+    TopRight = 1
+    BottomRight = 2
+    BottomLeft = 3
 
 # ---------------------------------------
 # not used
@@ -121,40 +109,6 @@ def pose_rotation(meta, preproc_config):
     meta.img = img
 
     return meta
-
-
-def pose_flip(meta):
-    r = random.uniform(0, 1.0)
-    if r > 0.5:
-        return meta
-
-    img = meta.img
-    img = cv2.flip(img, 1)
-
-    # flip meta
-    flip_list = [CocoPart.Top, CocoPart.Neck, CocoPart.LShoulder, CocoPart.LElbow, CocoPart.LWrist, CocoPart.RShoulder,
-                 CocoPart.RElbow, CocoPart.RWrist,
-                 CocoPart.LHip, CocoPart.LKnee, CocoPart.LAnkle, CocoPart.RHip, CocoPart.RKnee, CocoPart.RAnkle]
-
-    adjust_joint_list = []
-    for joint in meta.joint_list:
-        adjust_joint = []
-        for cocopart in flip_list:
-            point = joint[cocopart.value]
-            if point[0] < -100 or point[1] < -100:
-                adjust_joint.append((-1000, -1000))
-                continue
-            # if point[0] <= 0 or point[1] <= 0:
-            #     adjust_joint.append((-1, -1))
-            #     continue
-            adjust_joint.append((meta.width - point[0], point[1]))
-        adjust_joint_list.append(adjust_joint)
-
-    meta.joint_list = adjust_joint_list
-
-    meta.img = img
-    return meta
-
 
 def pose_resize_shortestedge_random(meta):
     ratio_w = float(_network_w) / float(meta.width)
@@ -275,14 +229,14 @@ def pose_crop_random(meta):
 
         # --------------------------------------------------------------------------
         for joint in meta.joint_list:
-            if x <= joint[CocoPart.RKnee.value][0] < x + target_size[0] and \
-                    y <= joint[CocoPart.RKnee.value][1] < y + target_size[1] and \
-                    x <= joint[CocoPart.RAnkle.value][0] < x + target_size[0] and \
-                    y <= joint[CocoPart.RAnkle.value][1] < y + target_size[1] and \
-                    x <= joint[CocoPart.LKnee.value][0] < x + target_size[0] and \
-                    y <= joint[CocoPart.LKnee.value][1] < y + target_size[1] and \
-                    x <= joint[CocoPart.LAnkle.value][0] < x + target_size[0] and \
-                    y <= joint[CocoPart.LAnkle.value][1] < y + target_size[1]:
+            if x <= joint[CocoPart.TopLeft.value][0] < x + target_size[0] and \
+                    y <= joint[CocoPart.TopLeft.value][1] < y + target_size[1] and \
+                    x <= joint[CocoPart.TopRight.value][0] < x + target_size[0] and \
+                    y <= joint[CocoPart.TopRight.value][1] < y + target_size[1] and \
+                    x <= joint[CocoPart.BottomRight.value][0] < x + target_size[0] and \
+                    y <= joint[CocoPart.BottomRight.value][1] < y + target_size[1] and \
+                    x <= joint[CocoPart.BottomLeft.value][0] < x + target_size[0] and \
+                    y <= joint[CocoPart.BottomLeft.value][1] < y + target_size[1]:
                 break
         # --------------------------------------------------------------------------
 
@@ -306,8 +260,8 @@ def preprocess_image(img_meta_data, preproc_config):
     if preproc_config.is_rotate:
         img_meta_data = pose_rotation(img_meta_data, preproc_config)
 
-    if preproc_config.is_flipping:
-        img_meta_data = pose_flip(img_meta_data)
+    # if preproc_config.is_flipping:
+    #     img_meta_data = pose_flip(img_meta_data)
 
     if preproc_config.is_resize_shortest_edge:
         img_meta_data = pose_resize_shortestedge_random(img_meta_data)
