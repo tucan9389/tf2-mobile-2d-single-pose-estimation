@@ -54,8 +54,8 @@ output_name = current_time + output_model_name
 from data_loader.data_loader import DataLoader
 
 # dataloader instance gen
-train_images_dir_path = os.path.join(dataset_path, "train")
-train_annotation_json_filepath = os.path.join(dataset_path, "annotation.json")
+train_images_dir_path = os.path.join(dataset_path, "train/images")
+train_annotation_json_filepath = os.path.join(dataset_path, "train/annotation.json")
 print(">> LOAD TRAIN DATASET FORM:", train_annotation_json_filepath)
 dataloader_train = DataLoader(
     images_dir_path=train_images_dir_path,
@@ -64,8 +64,8 @@ dataloader_train = DataLoader(
     model_config=model_config,
     preproc_config=preproc_config)
 
-valid_images_dir_path = os.path.join(dataset_path, "valid")
-valid_annotation_json_filepath = os.path.join(dataset_path, "annotation.json")
+valid_images_dir_path = os.path.join(dataset_path, "valid/images")
+valid_annotation_json_filepath = os.path.join(dataset_path, "valid/annotation.json")
 print(">> LOAD VALID DATASET FORM:", valid_annotation_json_filepath)
 dataloader_valid = DataLoader(
     images_dir_path=valid_images_dir_path,
