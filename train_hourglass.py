@@ -142,7 +142,7 @@ def save_image_results(step, images, true_heatmaps, predicted_heatmaps):
     for i in range(images.shape[0]):
         image = images[i, :, :, :]
         heamap = true_heatmaps[i, :, :, :]
-        prediction = predicted_heatmaps[i, :, :, :]
+        prediction = predicted_heatmaps[-1][i, :, :, :]
 
         # result_image = display(i, image, heamap, prediction)
         result_image_path = os.path.join(output_path, output_name, val_image_results_directory, "result%d-%d.jpg" % (i, step))
@@ -175,9 +175,9 @@ def save_model(step=None, label=None):
 
 num_epochs = 1000
 step = 1
-number_of_echo_period = 100
-number_of_validimage_period = 1000
-number_of_modelsave_period = 2000
+number_of_echo_period = 5
+number_of_validimage_period = 5
+number_of_modelsave_period = 5
 valid_check = False
 
 
