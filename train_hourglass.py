@@ -215,7 +215,7 @@ number_of_echo_period = 100
 number_of_validimage_period = 1000000 # 1000
 number_of_modelsave_period = 2000
 tensorbaord_period = 10
-validation_period = 5
+validation_period = 200
 valid_check = False
 
 
