@@ -25,8 +25,8 @@ import json
 class ModelConfig(object):
 
     def __init__(self):
-        self.input_size = 128
-        self.output_size = 32  # it will be changed later
+        self.input_size = 192
+        self.output_size = 48  # it will be changed later
 
         self.input_chnum = 3
         self.output_chnum = 14  # number of keypoints

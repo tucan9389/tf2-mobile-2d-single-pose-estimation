@@ -1,4 +1,4 @@
-# Copyright 2019 Doyoung Gwak (tucan.dev@gmail.com)
+# Copyright 2020 Doyoung Gwak (tucan.dev@gmail.com)
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -35,15 +35,15 @@ train_config = TrainConfig()
 model_config = ModelConfig()
 preproc_config = PreprocessingConfig()
 
-train_config.input_size = 256
-train_config.output_size = 64
+train_config.input_size = 192
+train_config.output_size = 48
 train_config.batch_size = 32
 
-dataset_path = "/Volumes/tucan-SSD/datasets/coco_dataset"  # "/Volumes/tucan-SSD/datasets/ai_challenger"
+dataset_path = "/home/datasets/ai_challenger"  # "/Volumes/tucan-SSD/datasets/coco_dataset"
 dataset_name = dataset_path.split("/")[-1]
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
 output_model_name = "_sp-" + dataset_name
-output_path = "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
+output_path = "/home/outputs/mv2_hourglass"
 output_name = current_time + output_model_name
 
 
@@ -54,8 +54,8 @@ output_name = current_time + output_model_name
 from data_loader.data_loader import DataLoader
 
 # dataloader instance gen
-train_images_dir_path = os.path.join(dataset_path, "train2017")
-train_annotation_json_filepath = os.path.join(dataset_path, "annotations_trainval2017/person_keypoints_train2017.json")
+train_images_dir_path = os.path.join(dataset_path, "train")
+train_annotation_json_filepath = os.path.join(dataset_path, "annotation.json")
 print(">> LOAD TRAIN DATASET FORM:", train_annotation_json_filepath)
 dataloader_train = DataLoader(
     images_dir_path=train_images_dir_path,
@@ -64,8 +64,8 @@ dataloader_train = DataLoader(
     model_config=model_config,
     preproc_config=preproc_config)
 
-valid_images_dir_path = os.path.join(dataset_path, "val2017")
-valid_annotation_json_filepath = os.path.join(dataset_path, "annotations_trainval2017/person_keypoints_val2017.json")
+valid_images_dir_path = os.path.join(dataset_path, "valid")
+valid_annotation_json_filepath = os.path.join(dataset_path, "annotation.json")
 print(">> LOAD VALID DATASET FORM:", valid_annotation_json_filepath)
 dataloader_valid = DataLoader(
     images_dir_path=valid_images_dir_path,
@@ -86,15 +86,17 @@ val_images, val_heatmaps = dataloader_valid.get_images(0, batch_size=25) # from 
 # ============== configure model =================
 # ================================================
 from models.simpleposemobile_coco import simplepose_mobile_mobilenetv3_small_w1_coco as simpleposemodel
+from models.mv2_hourglass import build_mv2_hourglass_model
 # from models.simpleposemobile_coco import simplepose_mobile_mobilenetv2b_w1_coco as simpleposemodel
 # from models.simplepose_coco import simplepose_resneta152b_coco as simpleposemodel
 # from models.simplepose_coco import simplepose_resnet50b_coco as simpleposemodel
 
 # SimplePoseMobile
-model = simpleposemodel(keypoints=number_of_keypoints)
+# model = simpleposemodel(keypoints=number_of_keypoints)
+model = build_mv2_hourglass_model()
 
 # model configuration
-model.return_heatmap = True
+# model.return_heatmap = True
 
 loss_object = tf.keras.losses.MeanSquaredError()
 optimizer = tf.keras.optimizers.Adam(0.001, epsilon=1e-8)
