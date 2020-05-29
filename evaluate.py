@@ -44,22 +44,21 @@ def calculate_pckh(gt_heatmaps, pred_heatmaps, batch_size=32, kp_size=14, head_i
             gt_kp = np.unravel_index(np.argmax(b_gt_heatmap), b_gt_heatmap.shape)
             pred_kp = np.unravel_index(np.argmax(b_pred_heatmap), b_pred_heatmap.shape)
 
-            print(kp_index, "gt_kp  :", gt_kp)
-            print(kp_index, "pred_kp:", pred_kp)
+            # print(kp_index, "gt_kp  :", gt_kp)
+            # print(kp_index, "pred_kp:", pred_kp)
 
             gt_coord = [(gt_kp[0] + 0.5) / heatmap_w_h, (gt_kp[1] + 0.5) / heatmap_w_h]
             pred_coord = [(pred_kp[0] + 0.5) / heatmap_w_h, (pred_kp[1] + 0.5) / heatmap_w_h]
 
-            # distance = math.dist(gt_coord, pred_coord)
-            print(np.array(gt_coord), np.array(pred_coord))
-            print(np.array(gt_coord) - np.array(pred_coord))
+            # print(np.array(gt_coord), np.array(pred_coord))
+            # print(np.array(gt_coord) - np.array(pred_coord))
             dist = np.linalg.norm(np.array(gt_coord) - np.array(pred_coord))
 
             if dist >= threshold_dist:
-                print("true")
+                # print("true")
                 score += 1.0
             else:
-                print("false")
+                # print("false")
                 score += 0.0
         score = score / kp_size
         batch_score += score

@@ -255,7 +255,7 @@ if __name__ == '__main__':
                     tf.summary.scalar('last_layer_loss - min', min_val.numpy(), step=step)
 
             if validation_period is not None and step % validation_period == 0:
-                print("calcuate pckh")
+                # print("calcuate pckh")
                 pckh_score = calculate_pckh_on_valid_dataset()
                 with train_summary_writer.as_default():
                     tf.summary.scalar('pckh_score', pckh_score, step=step)
