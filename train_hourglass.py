@@ -119,12 +119,13 @@ def train_step(images, labels):
             if total_loss is None:
                 total_loss = last_loss  # <class 'tensorflow.python.framework.ops.Tensor'>
             else:
-                total_loss= total_loss + last_loss
-
+                total_loss = total_loss + last_loss
+    max_val = tf.math.reduce_max(predictions_layers[-1])
+    min_val = tf.math.reduce_min(predictions_layers[-1])
     gradients = tape.gradient(total_loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(total_loss)
-    return total_loss, last_loss
+    return total_loss, last_loss, max_val, min_val
 
 from save_result_as_image import save_result_image
 
@@ -206,7 +207,7 @@ if __name__ == '__main__':
 
             # print(images.shape)  # (32, 128, 128, 3)
             # print(heatmaps.shape)  # (32, 32, 32, 17)
-            total_loss, last_layer_loss = train_step(images, heatmaps)
+            total_loss, last_layer_loss, max_val, min_val = train_step(images, heatmaps)
 
             step += 1
 
@@ -225,6 +226,8 @@ if __name__ == '__main__':
                 with train_summary_writer.as_default():
                     tf.summary.scalar('total_loss', total_loss.numpy(), step=step)
                     tf.summary.scalar('last_layer_loss', last_layer_loss.numpy(), step=step)
+                    tf.summary.scalar('last_layer_loss - max', max_val.numpy(), step=step)
+                    tf.summary.scalar('last_layer_loss - min', min_val.numpy(), step=step)
 
         # if not valid_check:
         #     continue
