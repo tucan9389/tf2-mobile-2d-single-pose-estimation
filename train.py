@@ -220,6 +220,7 @@ if __name__ == '__main__':
 
             if step % tensorbaord_period == 0:
                 with train_summary_writer.as_default():
+                    tf.summary.scalar("learning_rate", optimizer._decayed_lr(var_dtype=tf.float32), step=step)
                     tf.summary.scalar('loss', loss.numpy(), step=step)
                     print("loss", loss.numpy())
 

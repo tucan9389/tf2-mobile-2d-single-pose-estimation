@@ -18,6 +18,7 @@ from __future__ import absolute_import, division, print_function
 import os
 import numpy as np
 import datetime
+import math
 
 import tensorflow as tf
 
@@ -81,6 +82,7 @@ number_of_keypoints = dataloader_train.number_of_keypoints # 17
 
 # train dataset
 dataset_train = dataloader_train.input_fn()
+dataset_valid = dataloader_valid.input_fn()
 
 # validation images
 val_images, val_heatmaps = dataloader_valid.get_images(0, batch_size=25) # from 22 index 6 images and 6 labels
@@ -133,6 +135,27 @@ def val_step(step, images, heamaps):
     predictions = model(images)
     predictions = np.array(predictions)
     save_image_results(step, images, heamaps, predictions)
+
+from evaluate import calculate_pckh
+
+def calculate_pckh_on_valid_dataset():
+    total_scores = []
+    for images, gt_heatmaps in dataset_valid:
+        pred_heatmaps_layers = model(images)
+        pred_heatmaps = pred_heatmaps_layers[-1]
+
+        gt_heatmaps = gt_heatmaps.numpy()
+        pred_heatmaps = pred_heatmaps.numpy()
+
+        score = calculate_pckh(gt_heatmaps, pred_heatmaps,
+                               batch_size=train_config.batch_size,
+                               kp_size=number_of_keypoints,
+                               head_index=0, neck_index=1)
+        total_scores.append(score)
+
+    total_score = math.mean(total_scores)
+    return total_score
+
 
 @tf.function
 def valid_step(images, labels):
@@ -192,6 +215,7 @@ number_of_echo_period = 100
 number_of_validimage_period = 1000000 # 1000
 number_of_modelsave_period = 2000
 tensorbaord_period = 10
+validation_period = 5
 valid_check = False
 
 
@@ -224,11 +248,16 @@ if __name__ == '__main__':
 
             if tensorbaord_period is not None and step % tensorbaord_period == 0:
                 with train_summary_writer.as_default():
+                    tf.summary.scalar('learning_rate', optimizer._decayed_lr(var_dtype=tf.float32), step=step)
                     tf.summary.scalar('total_loss', total_loss.numpy(), step=step)
                     tf.summary.scalar('last_layer_loss', last_layer_loss.numpy(), step=step)
                     tf.summary.scalar('last_layer_loss - max', max_val.numpy(), step=step)
                     tf.summary.scalar('last_layer_loss - min', min_val.numpy(), step=step)
 
+            if validation_period is not None and step % validation_period == 0:
+                pckh_score = calculate_pckh_on_valid_dataset()
+                with train_summary_writer.as_default():
+                    tf.summary.scalar('pckh_score', pckh_score, step=step)
         # if not valid_check:
         #     continue
 
