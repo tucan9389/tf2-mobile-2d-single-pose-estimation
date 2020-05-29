@@ -93,7 +93,7 @@ from models.mv2_hourglass import build_mv2_hourglass_model
 
 # SimplePoseMobile
 # model = simpleposemodel(keypoints=number_of_keypoints)
-model = build_mv2_hourglass_model()
+model = build_mv2_hourglass_model(number_of_keypoints=number_of_keypoints)
 
 # model configuration
 # model.return_heatmap = True

@@ -88,7 +88,7 @@ def _hourglass_module(input, stage_index, number_of_keypoints):
 
         return x, middle_layers
 
-def build_mv2_hourglass_model():
+def build_mv2_hourglass_model(number_of_keypoints):
     hourglas_stage_num = 4
     input_shape = (192, 192, 3)  # h, w, c
     input = layers.Input(shape=input_shape)
