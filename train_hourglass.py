@@ -46,6 +46,9 @@ output_model_name = "_sp-" + dataset_name
 output_path = "/home/outputs/mv2_hourglass"
 output_name = current_time + output_model_name
 
+output_log_path = os.path.join(output_path, output_name, "logs/gradient_tape")
+output_train_log_path = os.path.join(output_log_path, "train")
+output_valid_log_path = os.path.join(output_log_path, "valid")
 
 # ================================================
 # ================= load dataset =================
@@ -85,18 +88,19 @@ val_images, val_heatmaps = dataloader_valid.get_images(0, batch_size=25) # from 
 # ================================================
 # ============== configure model =================
 # ================================================
-from models.simpleposemobile_coco import simplepose_mobile_mobilenetv3_small_w1_coco as simpleposemodel
-from models.mv2_hourglass import build_mv2_hourglass_model
-# from models.simpleposemobile_coco import simplepose_mobile_mobilenetv2b_w1_coco as simpleposemodel
-# from models.simplepose_coco import simplepose_resneta152b_coco as simpleposemodel
-# from models.simplepose_coco import simplepose_resnet50b_coco as simpleposemodel
 
-# SimplePoseMobile
-# model = simpleposemodel(keypoints=number_of_keypoints)
+from models.mv2_hourglass import build_mv2_hourglass_model
+
 model = build_mv2_hourglass_model(number_of_keypoints=number_of_keypoints)
 
 # model configuration
 # model.return_heatmap = True
+
+# =================================================
+# ============== prepare training =================
+# =================================================
+
+train_summary_writer = tf.summary.create_file_writer(output_train_log_path)
 
 loss_object = tf.keras.losses.MeanSquaredError()
 optimizer = tf.keras.optimizers.Adam(0.001, epsilon=1e-8)
@@ -186,6 +190,7 @@ step = 1
 number_of_echo_period = 100
 number_of_validimage_period = 1000000 # 1000
 number_of_modelsave_period = 2000
+tensorbaord_period = 10
 valid_check = False
 
 
@@ -215,6 +220,11 @@ if __name__ == '__main__':
 
             if step % number_of_modelsave_period == 0:
                 save_model(step=step)
+
+            if tensorbaord_period is not None and step % tensorbaord_period == 0:
+                with train_summary_writer.as_default():
+                    tf.summary.scalar('total_loss', total_loss.numpy(), step=step)
+                    tf.summary.scalar('last_layer_loss', last_layer_loss.numpy(), step=step)
 
         # if not valid_check:
         #     continue

@@ -46,6 +46,9 @@ output_model_name = "_sp-" + dataset_name
 output_path = "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
 output_name = current_time + output_model_name
 
+output_log_path = os.path.join(output_path, output_name, "logs/gradient_tape")
+output_train_log_path = os.path.join(output_log_path, "train")
+output_valid_log_path = os.path.join(output_log_path, "valid")
 
 # ================================================
 # ================= load dataset =================
@@ -101,6 +104,12 @@ optimizer = tf.keras.optimizers.Adam(0.001, epsilon=1e-8)
 train_loss = tf.keras.metrics.Mean(name="train_loss")
 valid_loss = tf.keras.metrics.Mean(name="valid_loss")
 valid_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="valid_accuracy")
+
+# =================================================
+# ============== prepare training =================
+# =================================================
+
+train_summary_writer = tf.summary.create_file_writer(output_train_log_path)
 
 @tf.function
 def train_step(images, labels):
@@ -169,13 +178,16 @@ def save_model(step=None, label=None):
     print("-"*18 + " MODEL SAVE DONE!! " + "-"*18)
 
 
-
+# ================================================
+# ============== train the model =================
+# ================================================
 
 num_epochs = 1000
 step = 1
 number_of_echo_period = 100
 number_of_validimage_period = 1000
 number_of_modelsave_period = 2000
+tensorbaord_period = 10
 valid_check = False
 
 
@@ -205,6 +217,11 @@ if __name__ == '__main__':
 
             if step % number_of_modelsave_period == 0:
                 save_model(step=step)
+
+            if step % tensorbaord_period == 0:
+                with train_summary_writer.as_default():
+                    tf.summary.scalar('loss', loss.numpy(), step=step)
+                    print("loss", loss.numpy())
 
         # if not valid_check:
         #     continue
