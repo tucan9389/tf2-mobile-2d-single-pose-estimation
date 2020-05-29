@@ -108,17 +108,19 @@ valid_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="valid_accuracy
 def train_step(images, labels):
     with tf.GradientTape() as tape:
         predictions_layers = model(images)
-        loss = None
+        total_loss = None
+        last_loss = None
         for predictions in predictions_layers:
-            if loss is None:
-                loss = loss_object(labels, predictions)  # <class 'tensorflow.python.framework.ops.Tensor'>
+            last_loss = loss_object(labels, predictions)
+            if total_loss is None:
+                total_loss = last_loss  # <class 'tensorflow.python.framework.ops.Tensor'>
             else:
-                loss = loss + loss_object(labels, predictions)
+                total_loss= total_loss + last_loss
 
-    gradients = tape.gradient(loss, model.trainable_variables)
+    gradients = tape.gradient(total_loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    train_loss(loss)
-    return loss
+    train_loss(total_loss)
+    return total_loss, last_loss
 
 from save_result_as_image import save_result_image
 
@@ -183,7 +185,7 @@ num_epochs = 1000
 step = 1
 number_of_echo_period = 100
 number_of_validimage_period = 1000000 # 1000
-number_of_modelsave_period = 1000000 # 2000
+number_of_modelsave_period = 2000
 valid_check = False
 
 
@@ -199,13 +201,13 @@ if __name__ == '__main__':
 
             # print(images.shape)  # (32, 128, 128, 3)
             # print(heatmaps.shape)  # (32, 32, 32, 17)
-            loss = train_step(images, heatmaps)
+            total_loss, last_layer_loss = train_step(images, heatmaps)
 
             step += 1
 
             if step % number_of_echo_period == 0:
                 total_interval, per_step_interval = get_time_and_step_interval(step)
-                print(">> step: %d, total: %s, per_step: %s, loss: %.5f" % (step, total_interval, per_step_interval, loss))
+                print(f">> step: {step }, total: {total_interval}, per_step: {per_step_interval}, total loss: {total_loss:.5f}, last loss: {last_layer_loss:.5f}")
 
             # validation phase
             if step % number_of_validimage_period == 0:
