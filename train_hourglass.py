@@ -107,8 +107,14 @@ valid_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="valid_accuracy
 @tf.function
 def train_step(images, labels):
     with tf.GradientTape() as tape:
-        predictions = model(images)
-        loss = loss_object(labels, predictions)
+        predictions_layers = model(images)
+        loss = None
+        for predictions in predictions_layers:
+            if loss is None:
+                loss = loss_object(labels, predictions)  # <class 'tensorflow.python.framework.ops.Tensor'>
+            else:
+                loss = loss + loss_object(labels, predictions)
+
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
