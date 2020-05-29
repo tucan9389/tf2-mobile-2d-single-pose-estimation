@@ -153,7 +153,7 @@ def calculate_pckh_on_valid_dataset():
                                head_index=0, neck_index=1)
         total_scores.append(score)
 
-    total_score = math.mean(total_scores)
+    total_score = np.mean(total_scores)
     return total_score
 
 
