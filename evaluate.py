@@ -22,8 +22,8 @@ import numpy as np
 # evaludate
 # v 고려 안 함
 def calculate_pckh(gt_heatmaps, pred_heatmaps, batch_size=32, kp_size=14, head_index=0, neck_index=1):
-    heatmap_w_h = pred_heatmaps[1]
-    
+    heatmap_w_h = pred_heatmaps.shape[1]
+
     batch_score = 0.0
     for i in range(batch_size):
         b_gt_heatmaps = gt_heatmaps[i]
