@@ -105,10 +105,10 @@ val_images, val_heatmaps = dataloader_valid.get_images(0, batch_size=25) # from 
 # ================================================
 # ============== configure model =================
 # ================================================
-from models.simpleposemobile_coco import simplepose_mobile_mobilenetv3_small_w1_coco as simpleposemodel
+# from models.simpleposemobile_coco import simplepose_mobile_mobilenetv3_small_w1_coco as simpleposemodel
 # from models.simpleposemobile_coco import simplepose_mobile_mobilenetv2b_w1_coco as simpleposemodel
 # from models.simplepose_coco import simplepose_resneta152b_coco as simpleposemodel
-# from models.simplepose_coco import simplepose_resnet50b_coco as simpleposemodel
+from models.simplepose_coco import simplepose_resnet50b_coco as simpleposemodel
 
 # SimplePoseMobile
 model = simpleposemodel(keypoints=number_of_keypoints)
