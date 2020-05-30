@@ -39,8 +39,10 @@ train_config.input_size = 256
 train_config.output_size = 64
 train_config.batch_size = 32
 
-dataset_path = "/home/datasets/coco_dataset"  # "/Volumes/tucan-SSD/datasets/ai_challenger"
-dataset_name = dataset_path.split("/")[-1]
+dataset_root_path = "/home/datasets"  # "/Volumes/tucan-SSD/datasets"
+dataset_name = "ai_challenger"  # "coco_dataset"
+dataset_path = os.path.join(dataset_root_path, dataset_name)
+
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
 output_model_name = "_sp-" + dataset_name
 output_path = "/home/outputs/simplepose" # "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
@@ -57,8 +59,12 @@ output_valid_log_path = os.path.join(output_log_path, "valid")
 from data_loader.data_loader import DataLoader
 
 # dataloader instance gen
-train_images_dir_path = os.path.join(dataset_path, "train2017")
-train_annotation_json_filepath = os.path.join(dataset_path, "annotations_trainval2017/person_keypoints_train2017.json")
+# coco2017 - "train2017"
+# ai chall - "train/images"
+train_images_dir_path = os.path.join(dataset_path, "train/images")
+# coco2017 - "annotations_trainval2017/person_keypoints_train2017.json"
+# ai chall - "train/annotation.json"
+train_annotation_json_filepath = os.path.join(dataset_path, "train/annotation.json")
 print(">> LOAD TRAIN DATASET FORM:", train_annotation_json_filepath)
 dataloader_train = DataLoader(
     images_dir_path=train_images_dir_path,
@@ -67,8 +73,12 @@ dataloader_train = DataLoader(
     model_config=model_config,
     preproc_config=preproc_config)
 
-valid_images_dir_path = os.path.join(dataset_path, "val2017")
-valid_annotation_json_filepath = os.path.join(dataset_path, "annotations_trainval2017/person_keypoints_val2017.json")
+# coco2017 - "val2017"
+# ai chall - "valid/images"
+valid_images_dir_path = os.path.join(dataset_path, "valid/images")
+# coco2017 - "annotations_trainval2017/person_keypoints_val2017.json"
+# ai chall - "valid/annotation.json"
+valid_annotation_json_filepath = os.path.join(dataset_path, "valid/annotation.json")
 print(">> LOAD VALID DATASET FORM:", valid_annotation_json_filepath)
 dataloader_valid = DataLoader(
     images_dir_path=valid_images_dir_path,
@@ -77,7 +87,7 @@ dataloader_valid = DataLoader(
     model_config=model_config,
     preproc_config=preproc_config)
 
-number_of_keypoints = dataloader_train.number_of_keypoints # 17
+number_of_keypoints = dataloader_train.number_of_keypoints  # 17
 
 # train dataset
 dataset_train = dataloader_train.input_fn()
@@ -216,8 +226,6 @@ tensorbaord_period = 10
 validation_period = 200
 valid_check = False
 
-
-
 if __name__ == '__main__':
 
     # TRAIN!!
@@ -248,7 +256,6 @@ if __name__ == '__main__':
                 with train_summary_writer.as_default():
                     tf.summary.scalar("learning_rate", optimizer._decayed_lr(var_dtype=tf.float32), step=step)
                     tf.summary.scalar('loss', loss.numpy(), step=step)
-                    print("loss", loss.numpy())
 
             if validation_period is not None and step % validation_period == 0:
                 # print("calcuate pckh")
