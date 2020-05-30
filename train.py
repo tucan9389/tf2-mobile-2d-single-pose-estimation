@@ -258,7 +258,7 @@ if __name__ == '__main__':
     # ================================================
     num_epochs = 1000
     step = 1
-    number_of_echo_period = 100
+    number_of_echo_period = 5  # 100
     number_of_validimage_period = 100000 # 1000
     number_of_modelsave_period = 5  # 2000
     tensorbaord_period = 10
