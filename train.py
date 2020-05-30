@@ -30,7 +30,8 @@ from common import get_time_and_step_interval
 print("tensorflow version   :", tf.__version__) # 2.1.0
 print("keras version        :", tf.keras.__version__) # 2.2.4-tf
 
-train_config = TrainConfig()
+train_config\
+    = TrainConfig()
 model_config = ModelConfig()
 preproc_config = PreprocessingConfig()
 
@@ -129,13 +130,27 @@ train_summary_writer = tf.summary.create_file_writer(output_train_log_path)
 
 @tf.function
 def train_step(images, labels):
+    last_loss = None
     with tf.GradientTape() as tape:
-        predictions = model(images)
-        loss = loss_object(labels, predictions)
-    gradients = tape.gradient(loss, model.trainable_variables)
+        model_output = model(images)
+        if type(model_output) is list:    
+            predictions_layers = model_output
+            total_loss = None
+            last_loss = None
+            for predictions in predictions_layers:
+                last_loss = loss_object(labels, predictions)
+                if total_loss is None:
+                    total_loss = last_loss  # <class 'tensorflow.python.framework.ops.Tensor'>
+                else:
+                    total_loss = total_loss + last_loss
+        else:
+            predictions = model_output
+            total_loss = loss_object(labels, predictions)
+    max_val = tf.math.reduce_max(predictions)
+    gradients = tape.gradient(total_loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    train_loss(loss)
-    return loss
+    train_loss(total_loss)
+    return total_loss, last_loss, max_val
 
 from save_result_as_image import save_result_image
 
@@ -143,14 +158,6 @@ def val_step(step, images, heamaps):
     predictions = model(images)
     predictions = np.array(predictions)
     save_image_results(step, images, heamaps, predictions)
-
-@tf.function
-def valid_step(images, labels):
-    predictions = model(images)
-    v_loss = loss_object(labels, predictions)
-    valid_loss(v_loss)
-    # valid_accuracy(labels, predictions)
-    return v_loss
 
 from evaluate import calculate_pckh
 
@@ -175,6 +182,14 @@ def calculate_pckh_on_valid_dataset():
 
     total_score = np.mean(total_scores)
     return total_score
+
+@tf.function
+def valid_step(images, labels):
+    predictions = model(images)
+    v_loss = loss_object(labels, predictions)
+    valid_loss(v_loss)
+    # valid_accuracy(labels, predictions)
+    return v_loss
 
 def save_image_results(step, images, true_heatmaps, predicted_heatmaps):
     val_image_results_directory = "val_image_results"
@@ -225,10 +240,10 @@ if __name__ == '__main__':
     num_epochs = 1000
     step = 1
     number_of_echo_period = 100
-    number_of_validimage_period = 1000
+    number_of_validimage_period = 100000 # 1000
     number_of_modelsave_period = 2000
     tensorbaord_period = 10
-    validation_period = 200
+    validation_period = 500
     valid_check = False
 
     # TRAIN!!
@@ -240,13 +255,16 @@ if __name__ == '__main__':
 
             # print(images.shape)  # (32, 128, 128, 3)
             # print(heatmaps.shape)  # (32, 32, 32, 17)
-            loss = train_step(images, heatmaps)
+            total_loss, last_layer_loss, max_val = train_step(images, heatmaps)
 
             step += 1
 
             if step % number_of_echo_period == 0:
                 total_interval, per_step_interval = get_time_and_step_interval(step)
-                print(">> step: %d, total: %s, per_step: %s, loss: %.5f" % (step, total_interval, per_step_interval, loss))
+                if last_layer_loss is None:
+                    print(f">> step: {step}, total: {total_interval}, per_step: {per_step_interval}, total loss: {total_loss:.5f}")
+                else:  
+                    print(f">> step: {step}, total: {total_interval}, per_step: {per_step_interval}, total loss: {total_loss:.5f}, last loss: {last_layer_loss:.5f}")
 
             # validation phase
             if step % number_of_validimage_period == 0:
@@ -255,10 +273,13 @@ if __name__ == '__main__':
             if step % number_of_modelsave_period == 0:
                 save_model(step=step)
 
-            if step % tensorbaord_period == 0:
+            if tensorbaord_period is not None and step % tensorbaord_period == 0:
                 with train_summary_writer.as_default():
                     tf.summary.scalar("learning_rate", optimizer._decayed_lr(var_dtype=tf.float32), step=step)
-                    tf.summary.scalar('loss', loss.numpy(), step=step)
+                    tf.summary.scalar("total_loss", total_loss.numpy(), step=step)
+                    tf.summary.scalar("last_layer_loss - max", max_val.numpy(), step=step)
+                    if last_layer_loss is not None:
+                        tf.summary.scalar("last_layer_loss", last_layer_loss.numpy(), step=step)
 
             if validation_period is not None and step % validation_period == 0:
                 # print("calcuate pckh")

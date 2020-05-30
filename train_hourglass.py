@@ -16,18 +16,16 @@
 from __future__ import absolute_import, division, print_function
 
 import os
-import numpy as np
 import datetime
-import math
 
 import tensorflow as tf
+import numpy as np
 
 from config.model_config import ModelConfig
 from config.train_config import PreprocessingConfig
 from config.train_config import TrainConfig
 
 from common import get_time_and_step_interval
-
 
 print("tensorflow version   :", tf.__version__) # 2.1.0
 print("keras version        :", tf.keras.__version__) # 2.2.4-tf
@@ -50,15 +48,8 @@ if len(sys.argv) != 1:
 print(config_file)
 parser.read(config_file)
 
-dataset_root_path = parser["dataset"]["dataset_root_path"]
-dataset_directory_name = parser["dataset"]["dataset_directory_name"]
-train_images = parser["dataset"]["train_images"]
-train_annotation = parser["dataset"]["train_annotation"]
-valid_images = parser["dataset"]["valid_images"]
-valid_annotation = parser["dataset"]["valid_annotation"]
-
-dataset_root_path = parser["dataset"]["dataset_root_path"]  # "/Volumes/tucan-SSD/datasets"
-dataset_directory_name = parser["dataset"]["dataset_directory_name"]  # "coco_dataset"
+dataset_root_path = eval(parser["dataset"]["dataset_root_path"])  # "/Volumes/tucan-SSD/datasets"
+dataset_directory_name = eval(parser["dataset"]["dataset_directory_name"])  # "coco_dataset"
 dataset_path = os.path.join(dataset_root_path, dataset_directory_name)
 
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
@@ -77,8 +68,8 @@ output_valid_log_path = os.path.join(output_log_path, "valid")
 from data_loader.data_loader import DataLoader
 
 # dataloader instance gen
-train_images = parser["dataset"]["train_images"]
-train_annotation = parser["dataset"]["train_annotation"]
+train_images = eval(parser["dataset"]["train_images"])
+train_annotation = eval(parser["dataset"]["train_annotation"])
 train_images_dir_path = os.path.join(dataset_path, train_images)
 train_annotation_json_filepath = os.path.join(dataset_path, train_annotation)
 print(">> LOAD TRAIN DATASET FORM:", train_annotation_json_filepath)
@@ -89,8 +80,8 @@ dataloader_train = DataLoader(
     model_config=model_config,
     preproc_config=preproc_config)
 
-valid_images = parser["dataset"]["valid_images"]
-valid_annotation = parser["dataset"]["valid_annotation"]
+valid_images = eval(parser["dataset"]["valid_images"])
+valid_annotation = eval(parser["dataset"]["valid_annotation"])
 valid_images_dir_path = os.path.join(dataset_path, valid_images)
 valid_annotation_json_filepath = os.path.join(dataset_path, valid_annotation)
 print(">> LOAD VALID DATASET FORM:", valid_annotation_json_filepath)
@@ -101,7 +92,7 @@ dataloader_valid = DataLoader(
     model_config=model_config,
     preproc_config=preproc_config)
 
-number_of_keypoints = dataloader_train.number_of_keypoints # 17
+number_of_keypoints = dataloader_train.number_of_keypoints  # 17
 
 # train dataset
 dataset_train = dataloader_train.input_fn()
@@ -115,17 +106,10 @@ val_images, val_heatmaps = dataloader_valid.get_images(0, batch_size=25) # from 
 # ================================================
 
 from models.mv2_hourglass import build_mv2_hourglass_model
-
 model = build_mv2_hourglass_model(number_of_keypoints=number_of_keypoints)
 
 # model configuration
 # model.return_heatmap = True
-
-# =================================================
-# ============== prepare training =================
-# =================================================
-
-train_summary_writer = tf.summary.create_file_writer(output_train_log_path)
 
 loss_object = tf.keras.losses.MeanSquaredError()
 optimizer = tf.keras.optimizers.Adam(0.001, epsilon=1e-8)
@@ -133,24 +117,35 @@ train_loss = tf.keras.metrics.Mean(name="train_loss")
 valid_loss = tf.keras.metrics.Mean(name="valid_loss")
 valid_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="valid_accuracy")
 
+# =================================================
+# ============== prepare training =================
+# =================================================
+
+train_summary_writer = tf.summary.create_file_writer(output_train_log_path)
+
 @tf.function
 def train_step(images, labels):
+    last_loss = None
     with tf.GradientTape() as tape:
-        predictions_layers = model(images)
-        total_loss = None
-        last_loss = None
-        for predictions in predictions_layers:
-            last_loss = loss_object(labels, predictions)
-            if total_loss is None:
-                total_loss = last_loss  # <class 'tensorflow.python.framework.ops.Tensor'>
-            else:
-                total_loss = total_loss + last_loss
-    max_val = tf.math.reduce_max(predictions_layers[-1])
-    min_val = tf.math.reduce_min(predictions_layers[-1])
+        model_output = model(images)
+        if type(model_output) is list:    
+            predictions_layers = model_output
+            total_loss = None
+            last_loss = None
+            for predictions in predictions_layers:
+                last_loss = loss_object(labels, predictions)
+                if total_loss is None:
+                    total_loss = last_loss  # <class 'tensorflow.python.framework.ops.Tensor'>
+                else:
+                    total_loss = total_loss + last_loss
+        else:
+            predictions = model_output
+            total_loss = loss_object(labels, predictions)
+    max_val = tf.math.reduce_max(predictions)
     gradients = tape.gradient(total_loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(total_loss)
-    return total_loss, last_loss, max_val, min_val
+    return total_loss, last_loss, max_val
 
 from save_result_as_image import save_result_image
 
@@ -182,7 +177,6 @@ def calculate_pckh_on_valid_dataset():
 
     total_score = np.mean(total_scores)
     return total_score
-
 
 @tf.function
 def valid_step(images, labels):
@@ -233,21 +227,19 @@ def save_model(step=None, label=None):
     model.save(saved_model_path)
     print("-"*18 + " MODEL SAVE DONE!! " + "-"*18)
 
-
-
-
-num_epochs = 1000
-step = 1
-number_of_echo_period = 100
-number_of_validimage_period = 1000000 # 1000
-number_of_modelsave_period = 2000
-tensorbaord_period = 10
-validation_period = 200
-valid_check = False
-
-
-
 if __name__ == '__main__':
+    # ================================================
+    # ============== train the model =================
+    # ================================================
+
+    num_epochs = 1000
+    step = 1
+    number_of_echo_period = 100
+    number_of_validimage_period = 100000 # 1000
+    number_of_modelsave_period = 2000
+    tensorbaord_period = 10
+    validation_period = 500
+    valid_check = False
 
     # TRAIN!!
     get_time_and_step_interval(step, is_init=True)
@@ -258,13 +250,16 @@ if __name__ == '__main__':
 
             # print(images.shape)  # (32, 128, 128, 3)
             # print(heatmaps.shape)  # (32, 32, 32, 17)
-            total_loss, last_layer_loss, max_val, min_val = train_step(images, heatmaps)
+            total_loss, last_layer_loss, max_val = train_step(images, heatmaps)
 
             step += 1
 
             if step % number_of_echo_period == 0:
                 total_interval, per_step_interval = get_time_and_step_interval(step)
-                print(f">> step: {step }, total: {total_interval}, per_step: {per_step_interval}, total loss: {total_loss:.5f}, last loss: {last_layer_loss:.5f}")
+                if last_layer_loss is None:
+                    print(f">> step: {step}, total: {total_interval}, per_step: {per_step_interval}, total loss: {total_loss:.5f}")
+                else:  
+                    print(f">> step: {step}, total: {total_interval}, per_step: {per_step_interval}, total loss: {total_loss:.5f}, last loss: {last_layer_loss:.5f}")
 
             # validation phase
             if step % number_of_validimage_period == 0:
@@ -275,11 +270,11 @@ if __name__ == '__main__':
 
             if tensorbaord_period is not None and step % tensorbaord_period == 0:
                 with train_summary_writer.as_default():
-                    tf.summary.scalar('learning_rate', optimizer._decayed_lr(var_dtype=tf.float32), step=step)
-                    tf.summary.scalar('total_loss', total_loss.numpy(), step=step)
-                    tf.summary.scalar('last_layer_loss', last_layer_loss.numpy(), step=step)
-                    tf.summary.scalar('last_layer_loss - max', max_val.numpy(), step=step)
-                    tf.summary.scalar('last_layer_loss - min', min_val.numpy(), step=step)
+                    tf.summary.scalar("learning_rate", optimizer._decayed_lr(var_dtype=tf.float32), step=step)
+                    tf.summary.scalar("total_loss", total_loss.numpy(), step=step)
+                    tf.summary.scalar("last_layer_loss - max", max_val.numpy(), step=step)
+                    if last_layer_loss is not None:
+                        tf.summary.scalar("last_layer_loss", last_layer_loss.numpy(), step=step)
 
             if validation_period is not None and step % validation_period == 0:
                 # print("calcuate pckh")
@@ -287,6 +282,7 @@ if __name__ == '__main__':
                 with train_summary_writer.as_default():
                     tf.summary.scalar('pckh_score', pckh_score, step=step)
                 print(f"calcuate pckh done: {pckh_score}")
+
         # if not valid_check:
         #     continue
 
@@ -295,5 +291,11 @@ if __name__ == '__main__':
 
 
 
-
+    # last model save
     save_model(step=step, label="final")
+
+    # last pckh
+    pckh_score = calculate_pckh_on_valid_dataset()
+    with train_summary_writer.as_default():
+        tf.summary.scalar('pckh_score', pckh_score, step=step)
+    print(f"calcuate pckh done: {pckh_score}")
