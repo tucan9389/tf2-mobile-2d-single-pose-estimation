@@ -48,15 +48,8 @@ if len(sys.argv) != 1:
 print(config_file)
 parser.read(config_file)
 
-dataset_root_path = parser["dataset"]["dataset_root_path"]
-dataset_directory_name = parser["dataset"]["dataset_directory_name"]
-train_images = parser["dataset"]["train_images"]
-train_annotation = parser["dataset"]["train_annotation"]
-valid_images = parser["dataset"]["valid_images"]
-valid_annotation = parser["dataset"]["valid_annotation"]
-
-dataset_root_path = parser["dataset"]["dataset_root_path"]  # "/Volumes/tucan-SSD/datasets"
-dataset_directory_name = parser["dataset"]["dataset_directory_name"]  # "coco_dataset"
+dataset_root_path = eval(parser["dataset"]["dataset_root_path"])  # "/Volumes/tucan-SSD/datasets"
+dataset_directory_name = eval(parser["dataset"]["dataset_directory_name"])  # "coco_dataset"
 dataset_path = os.path.join(dataset_root_path, dataset_directory_name)
 
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
@@ -75,8 +68,8 @@ output_valid_log_path = os.path.join(output_log_path, "valid")
 from data_loader.data_loader import DataLoader
 
 # dataloader instance gen
-train_images = parser["dataset"]["train_images"]
-train_annotation = parser["dataset"]["train_annotation"]
+train_images = eval(parser["dataset"]["train_images"])
+train_annotation = eval(parser["dataset"]["train_annotation"])
 train_images_dir_path = os.path.join(dataset_path, train_images)
 train_annotation_json_filepath = os.path.join(dataset_path, train_annotation)
 print(">> LOAD TRAIN DATASET FORM:", train_annotation_json_filepath)
@@ -87,8 +80,8 @@ dataloader_train = DataLoader(
     model_config=model_config,
     preproc_config=preproc_config)
 
-valid_images = parser["dataset"]["valid_images"]
-valid_annotation = parser["dataset"]["valid_annotation"]
+valid_images = eval(parser["dataset"]["valid_images"])
+valid_annotation = eval(parser["dataset"]["valid_annotation"])
 valid_images_dir_path = os.path.join(dataset_path, valid_images)
 valid_annotation_json_filepath = os.path.join(dataset_path, valid_annotation)
 print(">> LOAD VALID DATASET FORM:", valid_annotation_json_filepath)
