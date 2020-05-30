@@ -142,7 +142,11 @@ def calculate_pckh_on_valid_dataset():
     total_scores = []
     for images, gt_heatmaps in dataset_valid:
         pred_heatmaps_layers = model(images)
-        pred_heatmaps = pred_heatmaps_layers[-1]
+
+        if len(pred_heatmaps_layers.shape) == 5:
+            pred_heatmaps = pred_heatmaps_layers[-1]
+        else:
+            pred_heatmaps = pred_heatmaps_layers
 
         gt_heatmaps = gt_heatmaps.numpy()
         pred_heatmaps = pred_heatmaps.numpy()

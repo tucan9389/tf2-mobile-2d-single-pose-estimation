@@ -81,6 +81,7 @@ number_of_keypoints = dataloader_train.number_of_keypoints # 17
 
 # train dataset
 dataset_train = dataloader_train.input_fn()
+dataset_valid = dataloader_valid.input_fn()
 
 # validation images
 val_images, val_heatmaps = dataloader_valid.get_images(0, batch_size=25) # from 22 index 6 images and 6 labels
@@ -136,6 +137,30 @@ def valid_step(images, labels):
     # valid_accuracy(labels, predictions)
     return v_loss
 
+from evaluate import calculate_pckh
+
+def calculate_pckh_on_valid_dataset():
+    total_scores = []
+    for images, gt_heatmaps in dataset_valid:
+        pred_heatmaps_layers = model(images)
+
+        if len(pred_heatmaps_layers.shape) == 5:
+            pred_heatmaps = pred_heatmaps_layers[-1]
+        else:
+            pred_heatmaps = pred_heatmaps_layers
+
+        gt_heatmaps = gt_heatmaps.numpy()
+        pred_heatmaps = pred_heatmaps.numpy()
+
+        score = calculate_pckh(gt_heatmaps, pred_heatmaps,
+                               batch_size=train_config.batch_size,
+                               kp_size=number_of_keypoints,
+                               head_index=0, neck_index=1)
+        total_scores.append(score)
+
+    total_score = np.mean(total_scores)
+    return total_score
+
 def save_image_results(step, images, true_heatmaps, predicted_heatmaps):
     val_image_results_directory = "val_image_results"
 
@@ -188,6 +213,7 @@ number_of_echo_period = 100
 number_of_validimage_period = 1000
 number_of_modelsave_period = 2000
 tensorbaord_period = 10
+validation_period = 200
 valid_check = False
 
 
@@ -224,6 +250,13 @@ if __name__ == '__main__':
                     tf.summary.scalar('loss', loss.numpy(), step=step)
                     print("loss", loss.numpy())
 
+            if validation_period is not None and step % validation_period == 0:
+                # print("calcuate pckh")
+                pckh_score = calculate_pckh_on_valid_dataset()
+                with train_summary_writer.as_default():
+                    tf.summary.scalar('pckh_score', pckh_score, step=step)
+                print(f"calcuate pckh done: {pckh_score}")
+
         # if not valid_check:
         #     continue
 
@@ -232,5 +265,11 @@ if __name__ == '__main__':
 
 
 
-
+    # last model save
     save_model(step=step, label="final")
+
+    # last pckh
+    pckh_score = calculate_pckh_on_valid_dataset()
+    with train_summary_writer.as_default():
+        tf.summary.scalar('pckh_score', pckh_score, step=step)
+    print(f"calcuate pckh done: {pckh_score}")
