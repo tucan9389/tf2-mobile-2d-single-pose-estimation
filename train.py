@@ -102,15 +102,39 @@ train_loss = tf.keras.metrics.Mean(name="train_loss")
 valid_loss = tf.keras.metrics.Mean(name="valid_loss")
 valid_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="valid_accuracy")
 
+# @tf.function
+# def train_step(images, labels):
+#     with tf.GradientTape() as tape:
+#         predictions = model(images)
+#         loss = loss_object(labels, predictions)
+#     gradients = tape.gradient(loss, model.trainable_variables)
+#     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+#     train_loss(loss)
+#     return loss
+
 @tf.function
 def train_step(images, labels):
+    last_loss = None
     with tf.GradientTape() as tape:
-        predictions = model(images)
-        loss = loss_object(labels, predictions)
-    gradients = tape.gradient(loss, model.trainable_variables)
+        model_output = model(images, training=False)
+        if type(model_output) is list:
+            predictions_layers = model_output
+            total_loss = None
+            last_loss = None
+            for predictions in predictions_layers:
+                last_loss = loss_object(labels, predictions)
+                if total_loss is None:
+                    total_loss = last_loss  # <class 'tensorflow.python.framework.ops.Tensor'>
+                else:
+                    total_loss = total_loss + last_loss
+        else:
+            predictions = model_output
+            total_loss = loss_object(labels, predictions)
+    max_val = tf.math.reduce_max(predictions)
+    gradients = tape.gradient(total_loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    train_loss(loss)
-    return loss
+    train_loss(total_loss)
+    return total_loss#, last_loss, max_val
 
 from save_result_as_image import save_result_image
 
