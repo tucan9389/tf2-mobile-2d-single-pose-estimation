@@ -39,11 +39,11 @@ train_config.input_size = 256
 train_config.output_size = 64
 train_config.batch_size = 32
 
-dataset_path = "/Volumes/tucan-SSD/datasets/coco_dataset"  # "/Volumes/tucan-SSD/datasets/ai_challenger"
+dataset_path = "/home/datasets/coco_dataset"  # "/Volumes/tucan-SSD/datasets/ai_challenger"
 dataset_name = dataset_path.split("/")[-1]
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
 output_model_name = "_sp-" + dataset_name
-output_path = "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
+output_path = "/home/outputs/simplepose" # "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
 output_name = current_time + output_model_name
 
 output_log_path = os.path.join(output_path, output_name, "logs/gradient_tape")
