@@ -291,7 +291,7 @@ if __name__ == '__main__':
                     echo_textes.append(f"total loss: {total_loss}")
                 if last_layer_loss is not None:
                     echo_textes.append(f"last loss: {last_layer_loss}")
-                print(">> " + echo_textes.join(", "))
+                print(">> " + ", ".join(echo_textes))
 
             # validation phase
             if step % number_of_validimage_period == 0:
