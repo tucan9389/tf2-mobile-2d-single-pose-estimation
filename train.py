@@ -55,7 +55,7 @@ dataset_path = os.path.join(dataset_root_path, dataset_directory_name)
 
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
 output_model_name = "_sp-" + dataset_directory_name
-output_path = "/home/outputs/simplepose" # "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
+output_path = "/home/outputs/simplepose"  # "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
 output_name = current_time + output_model_name
 
 output_log_path = os.path.join(output_path, output_name, "logs/gradient_tape")
@@ -241,7 +241,7 @@ if __name__ == '__main__':
     step = 1
     number_of_echo_period = 100
     number_of_validimage_period = 100000 # 1000
-    number_of_modelsave_period = 2000
+    number_of_modelsave_period = 5  # 2000
     tensorbaord_period = 10
     validation_period = 500
     valid_check = False
