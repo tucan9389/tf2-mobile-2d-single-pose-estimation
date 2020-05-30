@@ -234,9 +234,28 @@ def save_model(step=None, label=None):
 
 if __name__ == '__main__':
     # ================================================
+    # ============= load hyperparams =================
+    # ================================================
+    # config_dataset = ...
+    # config_model = ...
+    # config_output = ...
+
+    # ================================================
+    # =============== load dataset ===================
+    # ================================================
+    # dataset_train = ...
+    # dataset_valid = ...
+    # dataset_test = ...
+
+    # ================================================
+    # =============== build model ====================
+    # ================================================
+    # model = ...
+    # model.summary()
+
+    # ================================================
     # ============== train the model =================
     # ================================================
-
     num_epochs = 1000
     step = 1
     number_of_echo_period = 100
@@ -261,10 +280,18 @@ if __name__ == '__main__':
 
             if step % number_of_echo_period == 0:
                 total_interval, per_step_interval = get_time_and_step_interval(step)
-                if last_layer_loss is None:
-                    print(f">> step: {step}, total: {total_interval}, per_step: {per_step_interval}, total loss: {total_loss:.5f}")
-                else:  
-                    print(f">> step: {step}, total: {total_interval}, per_step: {per_step_interval}, total loss: {total_loss:.5f}, last loss: {last_layer_loss:.5f}")
+                echo_textes = []
+                if step is not None:
+                    echo_textes.append(f"step: {step}")
+                if total_interval is not None:
+                    echo_textes.append(f"total: {total_interval}")
+                if per_step_interval is not None:
+                    echo_textes.append(f"per_step: {per_step_interval}")
+                if total_loss is not None:
+                    echo_textes.append(f"total loss: {total_loss}")
+                if last_layer_loss is not None:
+                    echo_textes.append(f"last loss: {last_layer_loss}")
+                print(">> " + echo_textes.join(", "))
 
             # validation phase
             if step % number_of_validimage_period == 0:
