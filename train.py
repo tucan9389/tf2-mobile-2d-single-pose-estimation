@@ -134,18 +134,18 @@ def train_step(images, labels):
     gradients = tape.gradient(total_loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(total_loss)
-    return total_loss#, last_loss, max_val
+    return total_loss, last_loss, max_val
 
 from save_result_as_image import save_result_image
 
 def val_step(step, images, heamaps):
-    predictions = model(images)
+    predictions = model(images, training=False)
     predictions = np.array(predictions)
     save_image_results(step, images, heamaps, predictions)
 
 @tf.function
 def valid_step(images, labels):
-    predictions = model(images)
+    predictions = model(images, training=False)
     v_loss = loss_object(labels, predictions)
     valid_loss(v_loss)
     # valid_accuracy(labels, predictions)
@@ -215,13 +215,24 @@ if __name__ == '__main__':
 
             # print(images.shape)  # (32, 128, 128, 3)
             # print(heatmaps.shape)  # (32, 32, 32, 17)
-            loss = train_step(images, heatmaps)
+            total_loss, last_layer_loss, max_val = train_step(images, heatmaps)
 
             step += 1
 
             if step % number_of_echo_period == 0:
                 total_interval, per_step_interval = get_time_and_step_interval(step)
-                print(">> step: %d, total: %s, per_step: %s, loss: %.5f" % (step, total_interval, per_step_interval, loss))
+                echo_textes = []
+                if step is not None:
+                    echo_textes.append(f"step: {step}")
+                if total_interval is not None:
+                    echo_textes.append(f"total: {total_interval}")
+                if per_step_interval is not None:
+                    echo_textes.append(f"per_step: {per_step_interval}")
+                if total_loss is not None:
+                    echo_textes.append(f"total loss: {total_loss:.6f}")
+                if last_layer_loss is not None:
+                    echo_textes.append(f"last loss: {last_layer_loss:.6f}")
+                print(">> " + ", ".join(echo_textes))
 
             # validation phase
             if step % number_of_validimage_period == 0:
