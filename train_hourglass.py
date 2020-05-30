@@ -40,11 +40,30 @@ train_config.input_size = 192
 train_config.output_size = 48
 train_config.batch_size = 32
 
-dataset_path = "/home/datasets/ai_challenger"  # "/Volumes/tucan-SSD/datasets/coco_dataset"
-dataset_name = dataset_path.split("/")[-1]
+import sys
+from configparser import ConfigParser
+
+parser = ConfigParser()
+config_file = "config/dataset/coco2017-gpu.cfg"
+if len(sys.argv) != 1:
+    config_file = sys.argv[1]
+print(config_file)
+parser.read(config_file)
+
+dataset_root_path = parser["dataset"]["dataset_root_path"]
+dataset_directory_name = parser["dataset"]["dataset_directory_name"]
+train_images = parser["dataset"]["train_images"]
+train_annotation = parser["dataset"]["train_annotation"]
+valid_images = parser["dataset"]["valid_images"]
+valid_annotation = parser["dataset"]["valid_annotation"]
+
+dataset_root_path = parser["dataset"]["dataset_root_path"]  # "/Volumes/tucan-SSD/datasets"
+dataset_directory_name = parser["dataset"]["dataset_directory_name"]  # "coco_dataset"
+dataset_path = os.path.join(dataset_root_path, dataset_directory_name)
+
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
-output_model_name = "_sp-" + dataset_name
-output_path = "/home/outputs/mv2_hourglass"
+output_model_name = "_sp-" + dataset_directory_name
+output_path = "/home/outputs/simplepose" # "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
 output_name = current_time + output_model_name
 
 output_log_path = os.path.join(output_path, output_name, "logs/gradient_tape")
@@ -58,8 +77,10 @@ output_valid_log_path = os.path.join(output_log_path, "valid")
 from data_loader.data_loader import DataLoader
 
 # dataloader instance gen
-train_images_dir_path = os.path.join(dataset_path, "train/images")
-train_annotation_json_filepath = os.path.join(dataset_path, "train/annotation.json")
+train_images = parser["dataset"]["train_images"]
+train_annotation = parser["dataset"]["train_annotation"]
+train_images_dir_path = os.path.join(dataset_path, train_images)
+train_annotation_json_filepath = os.path.join(dataset_path, train_annotation)
 print(">> LOAD TRAIN DATASET FORM:", train_annotation_json_filepath)
 dataloader_train = DataLoader(
     images_dir_path=train_images_dir_path,
@@ -68,8 +89,10 @@ dataloader_train = DataLoader(
     model_config=model_config,
     preproc_config=preproc_config)
 
-valid_images_dir_path = os.path.join(dataset_path, "valid/images")
-valid_annotation_json_filepath = os.path.join(dataset_path, "valid/annotation.json")
+valid_images = parser["dataset"]["valid_images"]
+valid_annotation = parser["dataset"]["valid_annotation"]
+valid_images_dir_path = os.path.join(dataset_path, valid_images)
+valid_annotation_json_filepath = os.path.join(dataset_path, valid_annotation)
 print(">> LOAD VALID DATASET FORM:", valid_annotation_json_filepath)
 dataloader_valid = DataLoader(
     images_dir_path=valid_images_dir_path,

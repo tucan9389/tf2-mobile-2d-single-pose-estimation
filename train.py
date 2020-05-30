@@ -16,17 +16,16 @@
 from __future__ import absolute_import, division, print_function
 
 import os
-import numpy as np
 import datetime
 
 import tensorflow as tf
+import numpy as np
 
 from config.model_config import ModelConfig
 from config.train_config import PreprocessingConfig
 from config.train_config import TrainConfig
 
 from common import get_time_and_step_interval
-
 
 print("tensorflow version   :", tf.__version__) # 2.1.0
 print("keras version        :", tf.keras.__version__) # 2.2.4-tf
@@ -39,12 +38,29 @@ train_config.input_size = 256
 train_config.output_size = 64
 train_config.batch_size = 32
 
-dataset_root_path = "/home/datasets"  # "/Volumes/tucan-SSD/datasets"
-dataset_name = "ai_challenger"  # "coco_dataset"
-dataset_path = os.path.join(dataset_root_path, dataset_name)
+import sys
+from configparser import ConfigParser
+
+parser = ConfigParser()
+config_file = "config/dataset/coco2017-gpu.cfg"
+if len(sys.argv) != 1:
+    config_file = sys.argv[1]
+print(config_file)
+parser.read(config_file)
+
+dataset_root_path = parser["dataset"]["dataset_root_path"]
+dataset_directory_name = parser["dataset"]["dataset_directory_name"]
+train_images = parser["dataset"]["train_images"]
+train_annotation = parser["dataset"]["train_annotation"]
+valid_images = parser["dataset"]["valid_images"]
+valid_annotation = parser["dataset"]["valid_annotation"]
+
+dataset_root_path = parser["dataset"]["dataset_root_path"]  # "/Volumes/tucan-SSD/datasets"
+dataset_directory_name = parser["dataset"]["dataset_directory_name"]  # "coco_dataset"
+dataset_path = os.path.join(dataset_root_path, dataset_directory_name)
 
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
-output_model_name = "_sp-" + dataset_name
+output_model_name = "_sp-" + dataset_directory_name
 output_path = "/home/outputs/simplepose" # "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
 output_name = current_time + output_model_name
 
@@ -59,12 +75,10 @@ output_valid_log_path = os.path.join(output_log_path, "valid")
 from data_loader.data_loader import DataLoader
 
 # dataloader instance gen
-# coco2017 - "train2017"
-# ai chall - "train/images"
-train_images_dir_path = os.path.join(dataset_path, "train/images")
-# coco2017 - "annotations_trainval2017/person_keypoints_train2017.json"
-# ai chall - "train/annotation.json"
-train_annotation_json_filepath = os.path.join(dataset_path, "train/annotation.json")
+train_images = parser["dataset"]["train_images"]
+train_annotation = parser["dataset"]["train_annotation"]
+train_images_dir_path = os.path.join(dataset_path, train_images)
+train_annotation_json_filepath = os.path.join(dataset_path, train_annotation)
 print(">> LOAD TRAIN DATASET FORM:", train_annotation_json_filepath)
 dataloader_train = DataLoader(
     images_dir_path=train_images_dir_path,
@@ -73,12 +87,10 @@ dataloader_train = DataLoader(
     model_config=model_config,
     preproc_config=preproc_config)
 
-# coco2017 - "val2017"
-# ai chall - "valid/images"
-valid_images_dir_path = os.path.join(dataset_path, "valid/images")
-# coco2017 - "annotations_trainval2017/person_keypoints_val2017.json"
-# ai chall - "valid/annotation.json"
-valid_annotation_json_filepath = os.path.join(dataset_path, "valid/annotation.json")
+valid_images = parser["dataset"]["valid_images"]
+valid_annotation = parser["dataset"]["valid_annotation"]
+valid_images_dir_path = os.path.join(dataset_path, valid_images)
+valid_annotation_json_filepath = os.path.join(dataset_path, valid_annotation)
 print(">> LOAD VALID DATASET FORM:", valid_annotation_json_filepath)
 dataloader_valid = DataLoader(
     images_dir_path=valid_images_dir_path,
@@ -212,21 +224,19 @@ def save_model(step=None, label=None):
     model.save(saved_model_path)
     print("-"*18 + " MODEL SAVE DONE!! " + "-"*18)
 
-
-# ================================================
-# ============== train the model =================
-# ================================================
-
-num_epochs = 1000
-step = 1
-number_of_echo_period = 100
-number_of_validimage_period = 1000
-number_of_modelsave_period = 2000
-tensorbaord_period = 10
-validation_period = 200
-valid_check = False
-
 if __name__ == '__main__':
+    # ================================================
+    # ============== train the model =================
+    # ================================================
+
+    num_epochs = 1000
+    step = 1
+    number_of_echo_period = 100
+    number_of_validimage_period = 1000
+    number_of_modelsave_period = 2000
+    tensorbaord_period = 10
+    validation_period = 200
+    valid_check = False
 
     # TRAIN!!
     get_time_and_step_interval(step, is_init=True)
