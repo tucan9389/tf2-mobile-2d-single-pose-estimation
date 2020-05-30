@@ -127,7 +127,7 @@ train_summary_writer = tf.summary.create_file_writer(output_train_log_path)
 def train_step(images, labels):
     last_loss = None
     with tf.GradientTape() as tape:
-        model_output = model(images)
+        model_output = model(images, training=False)
         if type(model_output) is list:    
             predictions_layers = model_output
             total_loss = None
@@ -180,7 +180,7 @@ def calculate_pckh_on_valid_dataset():
 
 @tf.function
 def valid_step(images, labels):
-    predictions = model(images)
+    predictions = model(images, training=False)
     v_loss = loss_object(labels, predictions)
     valid_loss(v_loss)
     # valid_accuracy(labels, predictions)
@@ -202,14 +202,14 @@ def save_image_results(step, images, true_heatmaps, predicted_heatmaps):
         prediction = predicted_heatmaps[-1][i, :, :, :]
 
         # result_image = display(i, image, heamap, prediction)
-        result_image_path = os.path.join(output_path, output_name, val_image_results_directory, "result%d-%d.jpg" % (i, step))
-        save_result_image(result_image_path, image, heamap, prediction, title="step:%dk" % (step/1000))
+        result_image_path = os.path.join(output_path, output_name, val_image_results_directory, f"result{i}-{step}.jpg")
+        save_result_image(result_image_path, image, heamap, prediction, title=f"step:{int(step/1000)}k")
         # print("val_step: save result image on \"" + result_image_path + "\"")
 
 def save_model(step=None, label=None):
     saved_model_directory = "saved_model"
     if step is not None:
-        saved_model_directory = saved_model_directory + "-%d" % step
+        saved_model_directory = saved_model_directory + f"-{step}"
     if label is not None:
         saved_model_directory = saved_model_directory + "-" + label
 
@@ -229,9 +229,28 @@ def save_model(step=None, label=None):
 
 if __name__ == '__main__':
     # ================================================
+    # ============= load hyperparams =================
+    # ================================================
+    # config_dataset = ...
+    # config_model = ...
+    # config_output = ...
+
+    # ================================================
+    # =============== load dataset ===================
+    # ================================================
+    # dataset_train = ...
+    # dataset_valid = ...
+    # dataset_test = ...
+
+    # ================================================
+    # =============== build model ====================
+    # ================================================
+    # model = ...
+    # model.summary()
+
+    # ================================================
     # ============== train the model =================
     # ================================================
-
     num_epochs = 1000
     step = 1
     number_of_echo_period = 100
@@ -264,9 +283,9 @@ if __name__ == '__main__':
                 if per_step_interval is not None:
                     echo_textes.append(f"per_step: {per_step_interval}")
                 if total_loss is not None:
-                    echo_textes.append(f"total loss: {total_loss}")
+                    echo_textes.append(f"total loss: {total_loss:.6f}")
                 if last_layer_loss is not None:
-                    echo_textes.append(f"last loss: {last_layer_loss}")
+                    echo_textes.append(f"last loss: {last_layer_loss:.6f}")
                 print(">> " + ", ".join(echo_textes))
 
             # validation phase

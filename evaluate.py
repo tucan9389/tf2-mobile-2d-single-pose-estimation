@@ -56,6 +56,7 @@ def calculate_pckh(gt_heatmaps, pred_heatmaps, batch_size=32, kp_size=14, head_i
                 scores.append(1.0)
             else:
                 scores.append(0.0)
+
         score = np.mean(scores)
         batch_scores.append(score)
     batch_score = np.mean(batch_scores)

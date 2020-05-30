@@ -30,8 +30,7 @@ from common import get_time_and_step_interval
 print("tensorflow version   :", tf.__version__) # 2.1.0
 print("keras version        :", tf.keras.__version__) # 2.2.4-tf
 
-train_config\
-    = TrainConfig()
+train_config = TrainConfig()
 model_config = ModelConfig()
 preproc_config = PreprocessingConfig()
 
@@ -155,7 +154,7 @@ def train_step(images, labels):
 from save_result_as_image import save_result_image
 
 def val_step(step, images, heamaps):
-    predictions = model(images)
+    predictions = model(images, training=False)
     predictions = np.array(predictions)
     save_image_results(step, images, heamaps, predictions)
 
@@ -164,7 +163,7 @@ from evaluate import calculate_pckh
 def calculate_pckh_on_valid_dataset():
     total_scores = []
     for images, gt_heatmaps in dataset_valid:
-        pred_heatmaps_layers = model(images)
+        pred_heatmaps_layers = model(images, training=False)
 
         if type(pred_heatmaps_layers) is list:
             pred_heatmaps = pred_heatmaps_layers[-1]
@@ -207,14 +206,14 @@ def save_image_results(step, images, true_heatmaps, predicted_heatmaps):
         prediction = predicted_heatmaps[i, :, :, :]
 
         # result_image = display(i, image, heamap, prediction)
-        result_image_path = os.path.join(output_path, output_name, val_image_results_directory, "result%d-%d.jpg" % (i, step))
-        save_result_image(result_image_path, image, heamap, prediction, title="step:%dk" % (step/1000))
+        result_image_path = os.path.join(output_path, output_name, val_image_results_directory, f"result{i}-{step}.jpg")
+        save_result_image(result_image_path, image, heamap, prediction, title=f"step:{int(step/1000)}k")
         # print("val_step: save result image on \"" + result_image_path + "\"")
 
 def save_model(step=None, label=None):
     saved_model_directory = "saved_model"
     if step is not None:
-        saved_model_directory = saved_model_directory + "-%d" % step
+        saved_model_directory = saved_model_directory + f"-{step}"
     if label is not None:
         saved_model_directory = saved_model_directory + "-" + label
 
@@ -288,9 +287,9 @@ if __name__ == '__main__':
                 if per_step_interval is not None:
                     echo_textes.append(f"per_step: {per_step_interval}")
                 if total_loss is not None:
-                    echo_textes.append(f"total loss: {total_loss}")
+                    echo_textes.append(f"total loss: {total_loss:.6f}")
                 if last_layer_loss is not None:
-                    echo_textes.append(f"last loss: {last_layer_loss}")
+                    echo_textes.append(f"last loss: {last_layer_loss:.6f}")
                 print(">> " + ", ".join(echo_textes))
 
             # validation phase
