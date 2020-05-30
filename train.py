@@ -132,7 +132,7 @@ train_summary_writer = tf.summary.create_file_writer(output_train_log_path)
 def train_step(images, labels):
     last_loss = None
     with tf.GradientTape() as tape:
-        model_output = model(images)
+        model_output = model(images, training=False)
         if type(model_output) is list:    
             predictions_layers = model_output
             total_loss = None
@@ -258,9 +258,9 @@ if __name__ == '__main__':
     # ================================================
     num_epochs = 1000
     step = 1
-    number_of_echo_period = 5  # 100
+    number_of_echo_period = 100
     number_of_validimage_period = 100000 # 1000
-    number_of_modelsave_period = 5  # 2000
+    number_of_modelsave_period = 2000
     tensorbaord_period = 10
     validation_period = 500
     valid_check = False
