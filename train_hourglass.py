@@ -249,9 +249,9 @@ if __name__ == '__main__':
     num_epochs = 1000
     step = 1
     number_of_echo_period = 100
-    number_of_validimage_period = 100000 # 1000
-    number_of_modelsave_period = None # 2000
-    tensorbaord_period = 10
+    number_of_validimage_period = 100000  # 1000
+    number_of_modelsave_period = 5  # 2000
+    tensorbaord_period = None  # 10
     validation_period = None  # 1000
     valid_check = False
 

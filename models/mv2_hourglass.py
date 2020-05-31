@@ -32,9 +32,14 @@ def _inverted_bottleneck(input, up_channel_rate, channels, is_subsample, kernel_
     x = layers.BatchNormalization(momentum=0.999)(x)
     x = layers.ReLU(max_value=6)(x)
 
+    # activation
+    x = layers.ReLU()(x)
+
     # 3x3 separable_conv2d
     x = layers.DepthwiseConv2D(kernel_size=kernel_size, strides=strides, padding="SAME",
                                kernel_regularizer=l2_regularizer_00004)(x)
+    # activation
+    x = layers.ReLU()(x)
 
     # 1x1 conv2d
     x = layers.Conv2D(filters=channels, kernel_size=(1, 1), strides=(1, 1), padding='SAME')(x)
@@ -74,7 +79,7 @@ def _hourglass_module(input, stage_index, number_of_keypoints):
         upsampling_layer = x
 
         # jump layer
-        x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
+        x = _inverted_bottleneck(input, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
         x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
         x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
         x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
@@ -99,8 +104,7 @@ def build_mv2_hourglass_model(number_of_keypoints):
     # batch norm
     x = layers.BatchNormalization(momentum=0.999)(x)
     # activation
-    x = layers.ReLU()(x)
-
+    x = layers.ReLU(max_value=6)(x)
 
     # 128, 112
     x = _inverted_bottleneck(x, up_channel_rate=1, channels=16, is_subsample=False, kernel_size=3)
