@@ -277,7 +277,7 @@ if __name__ == '__main__':
 
             step += 1
 
-            if step % number_of_echo_period == 0:
+            if number_of_echo_period is not None and step % number_of_echo_period == 0:
                 total_interval, per_step_interval = get_time_and_step_interval(step)
                 echo_textes = []
                 if step is not None:
@@ -293,10 +293,10 @@ if __name__ == '__main__':
                 print(">> " + ", ".join(echo_textes))
 
             # validation phase
-            if step % number_of_validimage_period == 0:
+            if number_of_validimage_period is not None and step % number_of_validimage_period == 0:
                 val_step(step, val_images, val_heatmaps)
 
-            if step % number_of_modelsave_period == 0:
+            if number_of_modelsave_period is not None and step % number_of_modelsave_period == 0:
                 save_model(step=step)
 
             if tensorbaord_period is not None and step % tensorbaord_period == 0:
