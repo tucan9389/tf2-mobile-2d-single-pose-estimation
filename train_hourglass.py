@@ -54,7 +54,7 @@ dataset_path = os.path.join(dataset_root_path, dataset_directory_name)
 
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
 output_model_name = "_sp-" + dataset_directory_name
-output_path = "/home/outputs/simplepose" # "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
+output_path = "/home/outputs/mv2_hourglass" # "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
 output_name = current_time + output_model_name
 
 output_log_path = os.path.join(output_path, output_name, "logs/gradient_tape")
@@ -128,19 +128,19 @@ def train_step(images, labels):
     last_loss = None
     with tf.GradientTape() as tape:
         model_output = model(images, training=False)
-        if type(model_output) is list:    
-            predictions_layers = model_output
-            total_loss = None
-            last_loss = None
-            for predictions in predictions_layers:
-                last_loss = loss_object(labels, predictions)
-                if total_loss is None:
-                    total_loss = last_loss  # <class 'tensorflow.python.framework.ops.Tensor'>
-                else:
-                    total_loss = total_loss + last_loss
-        else:
-            predictions = model_output
-            total_loss = loss_object(labels, predictions)
+        # if type(model_output) is list:    
+        predictions_layers = model_output
+        total_loss = None
+        last_loss = None
+        for predictions in predictions_layers:
+            last_loss = loss_object(labels, predictions)
+            if total_loss is None:
+                total_loss = last_loss  # <class 'tensorflow.python.framework.ops.Tensor'>
+            else:
+                total_loss = total_loss + last_loss
+        # else:
+        #     predictions = model_output
+        #     total_loss = loss_object(labels, predictions)
     max_val = tf.math.reduce_max(predictions)
     gradients = tape.gradient(total_loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -150,7 +150,7 @@ def train_step(images, labels):
 from save_result_as_image import save_result_image
 
 def val_step(step, images, heamaps):
-    predictions = model(images)
+    predictions = model(images, training=False)
     predictions = np.array(predictions)
     save_image_results(step, images, heamaps, predictions)
 

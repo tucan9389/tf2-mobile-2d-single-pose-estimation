@@ -184,7 +184,7 @@ def calculate_pckh_on_valid_dataset():
 
 @tf.function
 def valid_step(images, labels):
-    predictions = model(images)
+    predictions = model(images, training=False)
     v_loss = loss_object(labels, predictions)
     valid_loss(v_loss)
     # valid_accuracy(labels, predictions)
