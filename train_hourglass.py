@@ -125,27 +125,22 @@ train_summary_writer = tf.summary.create_file_writer(output_train_log_path)
 
 @tf.function
 def train_step(images, labels):
-    last_loss = None
     with tf.GradientTape() as tape:
         model_output = model(images, training=False)
         # if type(model_output) is list:    
         predictions_layers = model_output
-        total_loss = None
-        last_loss = None
-        for predictions in predictions_layers:
-            last_loss = loss_object(labels, predictions)
-            if total_loss is None:
-                total_loss = last_loss  # <class 'tensorflow.python.framework.ops.Tensor'>
-            else:
-                total_loss = total_loss + last_loss
+
+        losses = [loss_object(labels, predictions) for predictions in predictions_layers]
+        total_loss = tf.math.add_n(losses)
+
         # else:
         #     predictions = model_output
         #     total_loss = loss_object(labels, predictions)
-    max_val = tf.math.reduce_max(predictions)
+    max_val = tf.math.reduce_max(predictions_layers[-1])
     gradients = tape.gradient(total_loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(total_loss)
-    return total_loss, last_loss, max_val
+    return total_loss, total_loss[-1], max_val
 
 from save_result_as_image import save_result_image
 
@@ -257,7 +252,7 @@ if __name__ == '__main__':
     number_of_validimage_period = 100000 # 1000
     number_of_modelsave_period = 2000
     tensorbaord_period = 10
-    validation_period = 500
+    validation_period = 1000
     valid_check = False
 
     # TRAIN!!

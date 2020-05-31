@@ -261,7 +261,7 @@ if __name__ == '__main__':
     number_of_validimage_period = 100000 # 1000
     number_of_modelsave_period = 2000
     tensorbaord_period = 10
-    validation_period = 500
+    validation_period = 1000
     valid_check = False
 
     # TRAIN!!
