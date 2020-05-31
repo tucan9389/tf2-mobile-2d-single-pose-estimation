@@ -140,7 +140,7 @@ def train_step(images, labels):
     gradients = tape.gradient(total_loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(total_loss)
-    return total_loss, total_loss[-1], max_val
+    return total_loss, losses[-1], max_val
 
 from save_result_as_image import save_result_image
 
