@@ -43,7 +43,7 @@ import getopt
 from configparser import ConfigParser
 
 """
-python train_middlelayer.py --dataset_config==config/dataset/coco2017-gpu.cfg --experiment_config==config/training/experiment01.cfg
+python train_middlelayer.py --dataset_config=config/dataset/coco2017-gpu.cfg --experiment_config=config/training/experiment01.cfg
 """
 
 argv = sys.argv[1:]
@@ -73,7 +73,6 @@ parser.read(dataset_config_file_path)
 config_dataset = {}
 for key in parser["dataset"]:
     config_dataset[key] = eval(parser["dataset"][key])
-    print(type(config_dataset[key]))
 
 # get training config
 print(experiment_config_file_path)
@@ -93,7 +92,7 @@ dataset_directory_name = config_dataset["dataset_directory_name"]  # "coco_datas
 dataset_path = os.path.join(dataset_root_path, dataset_directory_name)
 
 output_root_path = config_output["output_root_path"]  # "/home/outputs"  # "/Volumes/tucan-SSD/ml-project/outputs"
-output_experiment_name = config_output["output_experiment_name"]  # "experiment01"
+output_experiment_name = config_output["experiment_name"]  # "experiment01"
 sub_experiment_name = config_output["sub_experiment_name"]  # "basic"
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
 model_name = config_model["model_name"]  # "simplepose"
@@ -240,7 +239,7 @@ def save_image_results(step, images, true_heatmaps, predicted_heatmaps):
         prediction = predicted_heatmaps[-1][i, :, :, :]
 
         # result_image = display(i, image, heamap, prediction)
-        result_image_path = os.path.join(output_path, output_name, val_image_results_directory, f"result{i}-{step}.jpg")
+        result_image_path = os.path.join(output_path, output_name, val_image_results_directory, f"result{i}-{step:0>6d}.jpg")
         save_result_image(result_image_path, image, heamap, prediction, title=f"step:{int(step/1000)}k")
         # print("val_step: save result image on \"" + result_image_path + "\"")
 
@@ -292,8 +291,8 @@ if __name__ == '__main__':
     num_epochs = 1000
     step = 1
     number_of_echo_period = 100
-    number_of_validimage_period = 100000  # 1000
-    number_of_modelsave_period = 1000
+    number_of_validimage_period = 3  # 100000  # 1000
+    number_of_modelsave_period = 5  # 1000
     tensorbaord_period = 10
     validation_period = None  # 1000
     valid_check = False
