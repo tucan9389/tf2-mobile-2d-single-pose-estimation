@@ -129,7 +129,7 @@ def build_mv2_cpm_model(number_of_keypoints):
 
     # ===============================================
     # ===================== CPM =====================
-    cpm_stage_num = 4
+    cpm_stage_num = 2
     previous_x = None
     middle_output_layers = []
     for stage in range(cpm_stage_num):
@@ -146,16 +146,16 @@ def build_mv2_cpm_model(number_of_keypoints):
             lastest_channel_size = 128
 
         x = _inverted_bottleneck(x, up_channel_rate=2, channels=24, is_subsample=False, kernel_size=kernel_size)
-        print("ib1:", x.shape)
+        # print("ib1:", x.shape)
         x = _inverted_bottleneck(x, up_channel_rate=4, channels=24, is_subsample=False, kernel_size=kernel_size)
-        print("ib2:", x.shape)
+        # print("ib2:", x.shape)
         x = _inverted_bottleneck(x, up_channel_rate=4, channels=24, is_subsample=False, kernel_size=kernel_size)
-        print("ib3:", x.shape)
+        # print("ib3:", x.shape)
 
         x = _separable_conv(x, channels=lastest_channel_size, kernel_size=1, strides=1)
-        print("sc1:", x.shape)
+        # print("sc1:", x.shape)
         x = _separable_conv(x, channels=number_of_keypoints, kernel_size=1, strides=1)
-        print("sc2:", x.shape)
+        # print("sc2:", x.shape)
 
         middle_output_layers.append(x)
         previous_x = x
