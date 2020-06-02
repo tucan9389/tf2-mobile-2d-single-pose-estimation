@@ -44,6 +44,7 @@ from configparser import ConfigParser
 
 """
 python train_middlelayer.py --dataset_config=config/dataset/coco2017-gpu.cfg --experiment_config=config/training/experiment01.cfg
+python train_middlelayer.py --dataset_config=config/dataset/ai_challenger-gpu.cfg --experiment_config=config/training/experiment01.cfg
 """
 
 argv = sys.argv[1:]
@@ -294,7 +295,7 @@ if __name__ == '__main__':
     number_of_validimage_period = 3  # 100000  # 1000
     number_of_modelsave_period = 5  # 1000
     tensorbaord_period = 10
-    validation_period = None  # 1000
+    validation_period = 10000  # 1000
     valid_check = False
 
     # TRAIN!!
