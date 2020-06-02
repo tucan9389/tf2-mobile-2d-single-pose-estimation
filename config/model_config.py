@@ -26,7 +26,7 @@ class ModelConfig(object):
 
     def __init__(self):
         self.input_size = 192
-        self.output_size = 24  # it will be changed later
+        self.output_size = 48  # it will be changed later
 
         self.input_chnum = 3
         self.output_chnum = 14  # number of keypoints
