@@ -176,9 +176,6 @@ def train_step(images, labels):
         losses = [loss_object(labels, predictions) for predictions in predictions_layers]
         total_loss = tf.math.add_n(losses)
 
-        # else:
-        #     predictions = model_output
-        #     total_loss = loss_object(labels, predictions)
     max_val = tf.math.reduce_max(predictions_layers[-1])
     gradients = tape.gradient(total_loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))

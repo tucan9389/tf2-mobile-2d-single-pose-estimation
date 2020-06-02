@@ -70,13 +70,14 @@ def _mobilenetV2(input):
     x = _inverted_bottleneck(input, up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
     x = _inverted_bottleneck(x, up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
     mv2_branch_0 = x
+    # print("mv2_branch_0.shape:", mv2_branch_0.shape)
 
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=18, is_subsample=True, kernel_size=3)
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=18, is_subsample=False, kernel_size=3)
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=18, is_subsample=False, kernel_size=3)
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=18, is_subsample=False, kernel_size=3)
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=18, is_subsample=False, kernel_size=3)
-    mv2_branch_1 = x
+    # x = _inverted_bottleneck(x, up_channel_rate=6, channels=18, is_subsample=True, kernel_size=3)
+    # x = _inverted_bottleneck(x, up_channel_rate=6, channels=18, is_subsample=False, kernel_size=3)
+    # x = _inverted_bottleneck(x, up_channel_rate=6, channels=18, is_subsample=False, kernel_size=3)
+    # x = _inverted_bottleneck(x, up_channel_rate=6, channels=18, is_subsample=False, kernel_size=3)
+    # x = _inverted_bottleneck(x, up_channel_rate=6, channels=18, is_subsample=False, kernel_size=3)
+    # mv2_branch_1 = x
 
     x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=True, kernel_size=3)
     x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
@@ -84,13 +85,14 @@ def _mobilenetV2(input):
     x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
     x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
     mv2_branch_2 = x
+    # print("mv2_branch_2.shape:", mv2_branch_2.shape)
 
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=48, is_subsample=True, kernel_size=3)
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=48, is_subsample=False, kernel_size=3)
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=48, is_subsample=False, kernel_size=3)
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=48, is_subsample=False, kernel_size=3)
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=48, is_subsample=False, kernel_size=3)
-    mv2_branch_3 = x
+    # x = _inverted_bottleneck(x, up_channel_rate=6, channels=48, is_subsample=True, kernel_size=3)
+    # x = _inverted_bottleneck(x, up_channel_rate=6, channels=48, is_subsample=False, kernel_size=3)
+    # x = _inverted_bottleneck(x, up_channel_rate=6, channels=48, is_subsample=False, kernel_size=3)
+    # x = _inverted_bottleneck(x, up_channel_rate=6, channels=48, is_subsample=False, kernel_size=3)
+    # x = _inverted_bottleneck(x, up_channel_rate=6, channels=48, is_subsample=False, kernel_size=3)
+    # mv2_branch_3 = x
 
     x = _inverted_bottleneck(x, up_channel_rate=6, channels=72, is_subsample=True, kernel_size=3)
     x = _inverted_bottleneck(x, up_channel_rate=6, channels=72, is_subsample=False, kernel_size=3)
@@ -98,13 +100,14 @@ def _mobilenetV2(input):
     x = _inverted_bottleneck(x, up_channel_rate=6, channels=72, is_subsample=False, kernel_size=3)
     x = _inverted_bottleneck(x, up_channel_rate=6, channels=72, is_subsample=False, kernel_size=3)
     mv2_branch_4 = x
+    # print("mv2_branch_4.shape:", mv2_branch_4.shape)
 
     x = layers.Concatenate(axis=3)([
-        layers.MaxPool2D(pool_size=(4, 4), strides=(4, 4), padding='SAME')(mv2_branch_0),
-        layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding='SAME')(mv2_branch_1),
+        layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding='SAME')(mv2_branch_0),
+        # layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding='SAME')(mv2_branch_1),
         mv2_branch_2,
-        layers.UpSampling2D(size=(2, 2), interpolation='bilinear')(mv2_branch_3),
-        layers.UpSampling2D(size=(4, 4), interpolation='bilinear')(mv2_branch_4),
+        # layers.UpSampling2D(size=(2, 2), interpolation='bilinear')(mv2_branch_3),
+        layers.UpSampling2D(size=(2, 2), interpolation='bilinear')(mv2_branch_4),
     ])
 
     return x
@@ -143,11 +146,16 @@ def build_mv2_cpm_model(number_of_keypoints):
             lastest_channel_size = 128
 
         x = _inverted_bottleneck(x, up_channel_rate=2, channels=24, is_subsample=False, kernel_size=kernel_size)
+        print("ib1:", x.shape)
         x = _inverted_bottleneck(x, up_channel_rate=4, channels=24, is_subsample=False, kernel_size=kernel_size)
+        print("ib2:", x.shape)
         x = _inverted_bottleneck(x, up_channel_rate=4, channels=24, is_subsample=False, kernel_size=kernel_size)
+        print("ib3:", x.shape)
 
         x = _separable_conv(x, channels=lastest_channel_size, kernel_size=1, strides=1)
+        print("sc1:", x.shape)
         x = _separable_conv(x, channels=number_of_keypoints, kernel_size=1, strides=1)
+        print("sc2:", x.shape)
 
         middle_output_layers.append(x)
         previous_x = x
@@ -156,4 +164,5 @@ def build_mv2_cpm_model(number_of_keypoints):
     return model
 
 model = build_mv2_cpm_model(number_of_keypoints=14)
-model.summary()
+# model.summary()
+print()
