@@ -52,14 +52,14 @@ dataset_root_path = eval(parser["dataset"]["dataset_root_path"])  # "/Volumes/tu
 dataset_directory_name = eval(parser["dataset"]["dataset_directory_name"])  # "coco_dataset"
 dataset_path = os.path.join(dataset_root_path, dataset_directory_name)
 
+output_root_path = "/home/outputs"  # "/Volumes/tucan-SSD/ml-project/outputs"
+output_experiment_name = "experiment01"
+sub_experiment_name = "basic"
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
-output_model_name = "_sp-" + dataset_directory_name
-output_path = "/home/outputs/simplepose"  # "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
-output_name = current_time + output_model_name
-
-output_log_path = os.path.join(output_path, output_name, "logs/gradient_tape")
-output_train_log_path = os.path.join(output_log_path, "train")
-output_valid_log_path = os.path.join(output_log_path, "valid")
+model_name = "simplepose"
+output_name = f"{current_time}_{model_name}_{sub_experiment_name}"
+output_path = os.path.join(output_root_path, output_experiment_name, dataset_directory_name)
+output_log_path = os.path.join(output_path, "logs", output_name)
 
 # ================================================
 # ================= load dataset =================
@@ -301,9 +301,8 @@ if __name__ == '__main__':
 
             if tensorbaord_period is not None and step % tensorbaord_period == 0:
                 with train_summary_writer.as_default():
-                    tf.summary.scalar("learning_rate", optimizer._decayed_lr(var_dtype=tf.float32), step=step)
                     tf.summary.scalar("total_loss", total_loss.numpy(), step=step)
-                    tf.summary.scalar("last_layer_loss - max", max_val.numpy(), step=step)
+                    tf.summary.scalar("max value - last_layer_loss", max_val.numpy(), step=step)
                     if last_layer_loss is not None:
                         tf.summary.scalar("last_layer_loss", last_layer_loss.numpy(), step=step)
 

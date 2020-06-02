@@ -35,31 +35,71 @@ model_config = ModelConfig()
 preproc_config = PreprocessingConfig()
 
 train_config.input_size = 192
-train_config.output_size = 48
+train_config.output_size = 24
 train_config.batch_size = 32
 
 import sys
+import getopt
 from configparser import ConfigParser
 
-parser = ConfigParser()
-config_file = "config/dataset/coco2017-gpu.cfg"
-if len(sys.argv) != 1:
-    config_file = sys.argv[1]
-print(config_file)
-parser.read(config_file)
+"""
+python train_middlelayer.py --dataset_config==config/dataset/coco2017-gpu.cfg --experiment_config==config/training/experiment01.cfg
+"""
 
-dataset_root_path = eval(parser["dataset"]["dataset_root_path"])  # "/Volumes/tucan-SSD/datasets"
-dataset_directory_name = eval(parser["dataset"]["dataset_directory_name"])  # "coco_dataset"
+argv = sys.argv[1:]
+
+try:
+    opts, args = getopt.getopt(argv, "d:e:", ["dataset_config=", "experiment_config="])
+except getopt.GetoptError:
+    print('train_hourglass.py --dataset_config <inputfile> --experiment_config <outputfile>')
+    sys.exit(2)
+
+dataset_config_file_path = "config/dataset/coco2017-gpu.cfg"
+experiment_config_file_path = "config/training/experiment01.cfg"
+for opt, arg in opts:
+    if opt == '-h':
+        print('train_middlelayer.py --dataset_config <inputfile> --experiment_config <outputfile>')
+        sys.exit()
+    elif opt in ("-d", "--dataset_config"):
+        dataset_config_file_path = arg
+    elif opt in ("-e", "--experiment_config"):
+        experiment_config_file_path = arg
+
+parser = ConfigParser()
+
+# get dataset config
+print(dataset_config_file_path)
+parser.read(dataset_config_file_path)
+config_dataset = {}
+for key in parser["dataset"]:
+    config_dataset[key] = eval(parser["dataset"][key])
+    print(type(config_dataset[key]))
+
+# get training config
+print(experiment_config_file_path)
+parser.read(experiment_config_file_path)
+config_model = {}
+for key in parser["model"]:
+    config_model[key] = eval(parser["model"][key])
+config_training = {}
+for key in parser["training"]:
+    config_model[key] = eval(parser["training"][key])
+config_output = {}
+for key in parser["output"]:
+    config_output[key] = eval(parser["output"][key])
+
+dataset_root_path = config_dataset["dataset_root_path"]  # "/Volumes/tucan-SSD/datasets"
+dataset_directory_name = config_dataset["dataset_directory_name"]  # "coco_dataset"
 dataset_path = os.path.join(dataset_root_path, dataset_directory_name)
 
+output_root_path = config_output["output_root_path"]  # "/home/outputs"  # "/Volumes/tucan-SSD/ml-project/outputs"
+output_experiment_name = config_output["output_experiment_name"]  # "experiment01"
+sub_experiment_name = config_output["sub_experiment_name"]  # "basic"
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
-output_model_name = "_sp-" + dataset_directory_name
-output_path = "/home/outputs/mv2_hourglass" # "/Volumes/tucan-SSD/ml-project/simplepose/outputs"
-output_name = current_time + output_model_name
-
-output_log_path = os.path.join(output_path, output_name, "logs/gradient_tape")
-output_train_log_path = os.path.join(output_log_path, "train")
-output_valid_log_path = os.path.join(output_log_path, "valid")
+model_name = config_model["model_name"]  # "simplepose"
+output_name = f"{current_time}_{model_name}_{sub_experiment_name}"
+output_path = os.path.join(output_root_path, output_experiment_name, dataset_directory_name)
+output_log_path = os.path.join(output_path, "logs", output_name)
 
 # ================================================
 # ================= load dataset =================
@@ -68,8 +108,8 @@ output_valid_log_path = os.path.join(output_log_path, "valid")
 from data_loader.data_loader import DataLoader
 
 # dataloader instance gen
-train_images = eval(parser["dataset"]["train_images"])
-train_annotation = eval(parser["dataset"]["train_annotation"])
+train_images = config_dataset["train_images"]
+train_annotation = config_dataset["train_annotation"]
 train_images_dir_path = os.path.join(dataset_path, train_images)
 train_annotation_json_filepath = os.path.join(dataset_path, train_annotation)
 print(">> LOAD TRAIN DATASET FORM:", train_annotation_json_filepath)
@@ -80,8 +120,8 @@ dataloader_train = DataLoader(
     model_config=model_config,
     preproc_config=preproc_config)
 
-valid_images = eval(parser["dataset"]["valid_images"])
-valid_annotation = eval(parser["dataset"]["valid_annotation"])
+valid_images = config_dataset["valid_images"]
+valid_annotation = config_dataset["valid_annotation"]
 valid_images_dir_path = os.path.join(dataset_path, valid_images)
 valid_annotation_json_filepath = os.path.join(dataset_path, valid_annotation)
 print(">> LOAD VALID DATASET FORM:", valid_annotation_json_filepath)
@@ -105,8 +145,11 @@ val_images, val_heatmaps = dataloader_valid.get_images(0, batch_size=25) # from 
 # ============== configure model =================
 # ================================================
 
-from models.mv2_hourglass import build_mv2_hourglass_model
-model = build_mv2_hourglass_model(number_of_keypoints=number_of_keypoints)
+# from models.mv2_hourglass import build_mv2_hourglass_model
+# model = build_mv2_hourglass_model(number_of_keypoints=number_of_keypoints)
+
+from models.mv2_cpm import build_mv2_cpm_model
+model = build_mv2_cpm_model(number_of_keypoints=number_of_keypoints)
 
 # model configuration
 # model.return_heatmap = True
@@ -121,7 +164,7 @@ valid_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="valid_accuracy
 # ============== prepare training =================
 # =================================================
 
-train_summary_writer = tf.summary.create_file_writer(output_train_log_path)
+train_summary_writer = tf.summary.create_file_writer(output_log_path)
 
 @tf.function
 def train_step(images, labels):
@@ -292,7 +335,6 @@ if __name__ == '__main__':
 
             if tensorbaord_period is not None and step % tensorbaord_period == 0:
                 with train_summary_writer.as_default():
-                    tf.summary.scalar("learning_rate", optimizer._decayed_lr(var_dtype=tf.float32), step=step)
                     tf.summary.scalar("total_loss", total_loss.numpy(), step=step)
                     tf.summary.scalar("last_layer_loss - max", max_val.numpy(), step=step)
                     if last_layer_loss is not None:
