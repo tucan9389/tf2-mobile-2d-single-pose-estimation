@@ -293,7 +293,7 @@ if __name__ == '__main__':
     step = 1
     number_of_echo_period = 100
     number_of_validimage_period = 100000  # 1000
-    number_of_modelsave_period = 1000  # 1000
+    number_of_modelsave_period = 1000
     tensorbaord_period = 10
     validation_period = 10000  # 1000
     valid_check = False
@@ -311,7 +311,7 @@ if __name__ == '__main__':
 
             step += 1
 
-            if step % number_of_echo_period == 0:
+            if number_of_echo_period is not None and step % number_of_echo_period == 0:
                 total_interval, per_step_interval = get_time_and_step_interval(step)
                 echo_textes = []
                 if step is not None:
@@ -336,7 +336,7 @@ if __name__ == '__main__':
             if tensorbaord_period is not None and step % tensorbaord_period == 0:
                 with train_summary_writer.as_default():
                     tf.summary.scalar("total_loss", total_loss.numpy(), step=step)
-                    tf.summary.scalar("last_layer_loss - max", max_val.numpy(), step=step)
+                    tf.summary.scalar("max_value - last_layer_loss", max_val.numpy(), step=step)
                     if last_layer_loss is not None:
                         tf.summary.scalar("last_layer_loss", last_layer_loss.numpy(), step=step)
 
