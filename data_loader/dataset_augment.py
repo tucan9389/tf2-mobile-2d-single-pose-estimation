@@ -4,9 +4,11 @@
 # @FileName: dataset_augument.py
 # @Software: PyCharm
 # @updated by Jaewook Kang 20181010 for tf-tiny-pose-estimation
+# @updated by Doyoung Gwak 20200607 for tf2-mobile-pose-estimation
 
 import math
 import random
+random.seed(3)
 
 import cv2
 import numpy as np
@@ -39,24 +41,6 @@ class CocoPart(Enum):
     LKnee = 12
     LAnkle = 13
     Background = 14  # Background is not used
-
-
-# ---------------------------------------
-# not used
-# def set_network_input_wh(w, h):
-#     global _network_w, _network_h
-#     _network_w, _network_h = w, h
-#
-#
-# def set_network_scale(scale):
-#     global _scale
-#     _scale = scale
-#
-#
-# def get_network_output_wh():
-#     return _network_w // _scale, _network_h // _scale
-# ---------------------------------------
-
 
 def pose_random_scale(meta):
     scalew = random.uniform(0.8, 1.2)
