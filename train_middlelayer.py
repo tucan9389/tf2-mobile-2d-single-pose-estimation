@@ -83,7 +83,7 @@ for key in parser["model"]:
     config_model[key] = eval(parser["model"][key])
 config_training = {}
 for key in parser["training"]:
-    config_model[key] = eval(parser["training"][key])
+    config_training[key] = eval(parser["training"][key])
 config_output = {}
 for key in parser["output"]:
     config_output[key] = eval(parser["output"][key])
@@ -192,29 +192,29 @@ def val_step(step, images, heamaps):
     predictions = np.array(predictions)
     save_image_results(step, images, heamaps, predictions)
 
-from evaluate import calculate_pckh
+from evaluate import calculate_total_pckh
 
-def calculate_pckh_on_valid_dataset():
-    total_scores = []
-    for images, gt_heatmaps in dataset_valid:
-        pred_heatmaps_layers = model(images, training=False)
-
-        if type(pred_heatmaps_layers) is list:
-            pred_heatmaps = pred_heatmaps_layers[-1]
-        else:
-            pred_heatmaps = pred_heatmaps_layers
-
-        gt_heatmaps = gt_heatmaps.numpy()
-        pred_heatmaps = pred_heatmaps.numpy()
-
-        score = calculate_pckh(gt_heatmaps, pred_heatmaps,
-                               batch_size=train_config.batch_size,
-                               kp_size=number_of_keypoints,
-                               head_index=0, neck_index=1)
-        total_scores.append(score)
-
-    total_score = np.mean(total_scores)
-    return total_score
+# def calculate_pckh_on_valid_dataset():
+#     total_scores = []
+#     for images, gt_heatmaps in dataset_valid:
+#         pred_heatmaps_layers = model(images, training=False)
+#
+#         if type(pred_heatmaps_layers) is list:
+#             pred_heatmaps = pred_heatmaps_layers[-1]
+#         else:
+#             pred_heatmaps = pred_heatmaps_layers
+#
+#         gt_heatmaps = gt_heatmaps.numpy()
+#         pred_heatmaps = pred_heatmaps.numpy()
+#
+#         score = calculate_pckh(gt_heatmaps, pred_heatmaps,
+#                                batch_size=train_config.batch_size,
+#                                kp_size=number_of_keypoints,
+#                                head_index=0, neck_index=1)
+#         total_scores.append(score)
+#
+#     total_score = np.mean(total_scores)
+#     return total_score
 
 @tf.function
 def valid_step(images, labels):
@@ -265,6 +265,8 @@ def save_model(step=None, label=None):
     model.save(saved_model_path)
     print("-"*18 + " MODEL SAVE DONE!! " + "-"*18)
 
+    return saved_model_path
+
 if __name__ == '__main__':
     # ================================================
     # ============= load hyperparams =================
@@ -295,8 +297,10 @@ if __name__ == '__main__':
     number_of_validimage_period = 100000  # 1000
     number_of_modelsave_period = 5000
     tensorbaord_period = 100
-    validation_period = 10000  # 1000
+    # validation_period = 2  # 1000
     valid_check = False
+    valid_pckh = True
+    distance_ratio = 0.5
 
     # TRAIN!!
     get_time_and_step_interval(step, is_init=True)
@@ -331,7 +335,16 @@ if __name__ == '__main__':
                 val_step(step, val_images, val_heatmaps)
 
             if number_of_modelsave_period is not None and step % number_of_modelsave_period == 0:
-                save_model(step=step)
+                saved_model_path = save_model(step=step)
+
+                if valid_pckh:
+                    # print("calcuate pckh")
+                    pckh_score = calculate_total_pckh(saved_model_path=saved_model_path,
+                                                      annotation_path=valid_annotation_json_filepath,
+                                                      images_path=valid_images_dir_path,
+                                                      distance_ratio=distance_ratio)
+                    with train_summary_writer.as_default():
+                        tf.summary.scalar(f'pckh@{distance_ratio:.1f}_score', pckh_score * 100, step=step)
 
             if tensorbaord_period is not None and step % tensorbaord_period == 0:
                 with train_summary_writer.as_default():
@@ -339,13 +352,6 @@ if __name__ == '__main__':
                     tf.summary.scalar("max_value - last_layer_loss", max_val.numpy(), step=step)
                     if last_layer_loss is not None:
                         tf.summary.scalar("last_layer_loss", last_layer_loss.numpy(), step=step)
-
-            if validation_period is not None and step % validation_period == 0:
-                # print("calcuate pckh")
-                pckh_score = calculate_pckh_on_valid_dataset()
-                with train_summary_writer.as_default():
-                    tf.summary.scalar('pckh_score', pckh_score, step=step)
-                print(f"calcuate pckh done: {pckh_score}")
 
         # if not valid_check:
         #     continue
@@ -359,7 +365,9 @@ if __name__ == '__main__':
     save_model(step=step, label="final")
 
     # last pckh
-    pckh_score = calculate_pckh_on_valid_dataset()
+    pckh_score = calculate_total_pckh(saved_model_path=saved_model_path,
+                                      annotation_path=valid_annotation_json_filepath,
+                                      images_path=valid_images_dir_path,
+                                      distance_ratio=distance_ratio)
     with train_summary_writer.as_default():
-        tf.summary.scalar('pckh_score', pckh_score, step=step)
-    print(f"calcuate pckh done: {pckh_score}")
+        tf.summary.scalar(f'pckh@{distance_ratio:.1f}_score', pckh_score * 100, step=step)
