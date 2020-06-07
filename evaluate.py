@@ -105,6 +105,11 @@ def calculate_total_pckh(saved_model_path=None,
                          annotation_path=None,
                          images_path=None,
                          distance_ratio=0.5):
+
+    print(saved_model_path)
+    print(annotation_path)
+    print(images_path)
+
     # timestamp
     _start_time = datetime.datetime.now()
 
@@ -122,6 +127,8 @@ def calculate_total_pckh(saved_model_path=None,
     for img_info in annotaiton_dict["images"]:
         image_infos[img_info["id"]] = img_info
     keypoint_infos = annotaiton_dict["annotations"]
+
+    print("len keypoint_infos:", len(keypoint_infos))
     # category_infos = annotaiton_dict["categories"]
 
     # Evaluate
