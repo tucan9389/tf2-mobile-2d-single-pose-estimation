@@ -240,7 +240,7 @@ class SimplePose(tf.keras.Model):
         x = self.backbone(x, training=training)
         heatmap = self.decoder(x, training=training)
         if self.return_heatmap or not tf.executing_eagerly():
-            return heatmap
+            return [heatmap]
         else:
             keypoints = self.heatmap_max_det(heatmap)
             return keypoints

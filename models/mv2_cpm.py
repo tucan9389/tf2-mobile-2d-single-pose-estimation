@@ -155,6 +155,3 @@ def build_mv2_cpm_model(number_of_keypoints):
 
     model = models.Model(input, outputs=middle_output_layers)
     return model
-
-model = build_mv2_cpm_model(number_of_keypoints=14)
-model.summary()

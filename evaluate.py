@@ -114,7 +114,7 @@ def calculate_total_pckh(saved_model_path=None,
     tflite_model_path = save_tflite(saved_model_path=saved_model_path, tflite_model_path=tflite_model_path)
     
     # Load tflite model
-    output_index = 3  # 3
+    output_index = -1  # 3
     model = TFLiteModel(tflite_model_path=tflite_model_path,
                         output_index=output_index)
 
@@ -170,6 +170,7 @@ if __name__ == '__main__':
     annotation_path = os.path.join(dataset_path, "annotation.json")
     images_path = os.path.join(dataset_path, "images")
     distance_ratio = 0.5
+
     calculate_total_pckh(saved_model_path=saved_model_path,
                          annotation_path=annotation_path,
                          images_path=images_path,

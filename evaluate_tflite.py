@@ -24,7 +24,7 @@ tf.random.set_seed(3)
 # output_index = 3
 
 class TFLiteModel:
-    def __init__(self, tflite_model_path, input_index=0, output_index=0):
+    def __init__(self, tflite_model_path, input_index=0, output_index=-1):
         self.tflite_model_path = tflite_model_path
         self.input_index = input_index
         self.output_index = output_index
