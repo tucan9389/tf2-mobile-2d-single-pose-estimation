@@ -8,6 +8,7 @@ __all__ = ['SENet', 'senet16', 'senet28', 'senet40', 'senet52', 'senet103', 'sen
 import os
 import math
 import tensorflow as tf
+tf.random.set_seed(3)
 import tensorflow.keras.layers as nn
 from .common import conv1x1_block, conv3x3_block, SEBlock, MaxPool2d, flatten
 

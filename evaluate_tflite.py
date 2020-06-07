@@ -16,6 +16,7 @@
 
 import numpy as np
 import tensorflow as tf
+tf.random.set_seed(3)
 
 # tflite_model_path = "/Volumes/tucan-SSD/ml-project/experime
 # nt001/ai_challenger/06022331_mv2_hourglass_basic/tflite/mv2_cpm-249000.tflite"

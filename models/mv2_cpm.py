@@ -17,6 +17,7 @@ from tensorflow.keras import models
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
 import tensorflow as tf
+tf.random.set_seed(3)
 
 l2_regularizer_00004 = regularizers.l2(0.00004)
 

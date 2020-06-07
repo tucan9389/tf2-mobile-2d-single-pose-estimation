@@ -10,6 +10,7 @@ __all__ = ['ResNet', 'resnet10', 'resnet12', 'resnet14', 'resnetbc14b', 'resnet1
 
 import os
 import tensorflow as tf
+tf.random.set_seed(3)
 import tensorflow.keras.layers as nn
 from .common import conv1x1_block, conv3x3_block, conv7x7_block, MaxPool2d, flatten, is_channels_first
 

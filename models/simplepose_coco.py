@@ -9,6 +9,7 @@ __all__ = ['SimplePose', 'simplepose_resnet18_coco', 'simplepose_resnet50b_coco'
 
 import os
 import tensorflow as tf
+tf.random.set_seed(3)
 import tensorflow.keras.layers as nn
 from .common import get_activation_layer, BatchNorm, conv1x1, HeatmapMaxDetBlock, is_channels_first
 from .resnet import resnet18, resnet50b, resnet101b, resnet152b

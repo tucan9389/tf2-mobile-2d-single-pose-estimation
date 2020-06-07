@@ -19,6 +19,7 @@ import os
 import datetime
 
 import tensorflow as tf
+tf.random.set_seed(3)
 import numpy as np
 
 from config.model_config import ModelConfig

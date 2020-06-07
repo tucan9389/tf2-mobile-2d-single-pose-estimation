@@ -23,6 +23,7 @@ from __future__ import absolute_import, division, print_function
 import sys
 
 import tensorflow as tf
+tf.random.set_seed(3)
 import os
 
 from pycocotools.coco import COCO

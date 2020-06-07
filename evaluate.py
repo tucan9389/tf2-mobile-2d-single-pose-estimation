@@ -18,6 +18,7 @@ import math
 # from scipy.ndimage.filters import gaussian_filter
 
 import tensorflow as tf
+tf.random.set_seed(3)
 import numpy as np
 
 def convert_heatmap_to_keypoint(heatmap, image_size):

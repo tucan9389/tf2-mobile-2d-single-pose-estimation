@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+tf.random.set_seed(3)
 # import keras
 from datetime import datetime
 # from config.path_manager import EXPORT_DIR

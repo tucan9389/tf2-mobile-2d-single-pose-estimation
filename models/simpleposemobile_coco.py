@@ -9,6 +9,7 @@ __all__ = ['SimplePoseMobile', 'simplepose_mobile_resnet18_coco', 'simplepose_mo
 
 import os
 import tensorflow as tf
+tf.random.set_seed(3)
 from .common import conv1x1, DucBlock, HeatmapMaxDetBlock, is_channels_first
 from .resnet import resnet18, resnet50b
 from .mobilenet import mobilenet_w1
