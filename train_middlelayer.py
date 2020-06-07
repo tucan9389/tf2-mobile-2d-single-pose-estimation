@@ -291,7 +291,7 @@ if __name__ == '__main__':
     # ================================================
     # ============== train the model =================
     # ================================================
-    num_epochs = 1000
+    num_epochs = 550
     step = 1
     number_of_echo_period = 100
     number_of_validimage_period = 100000  # 1000
