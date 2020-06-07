@@ -295,7 +295,7 @@ if __name__ == '__main__':
     step = 1
     number_of_echo_period = 100
     number_of_validimage_period = 100000  # 1000
-    number_of_modelsave_period = 2#5000
+    number_of_modelsave_period = 5000
     tensorbaord_period = 100
     # validation_period = 2  # 1000
     valid_check = False
