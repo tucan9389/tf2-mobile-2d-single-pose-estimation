@@ -146,7 +146,7 @@ def calculate_total_pckh(saved_model_path=None,
                                pred_heatmaps=pred_heatmaps,
                                distance_ratio=distance_ratio)
 
-        # print(f'img_id = {keypoint_info["image_id"]}, threshold = {threshold_dist:.2f}, score = {score:.3f}')
+        print(f'img_id = {keypoint_info["image_id"]}, score = {score:.3f}')
         total_scores.append(score)
 
         # print(f"{np.mean(total_scores):.2f}")
