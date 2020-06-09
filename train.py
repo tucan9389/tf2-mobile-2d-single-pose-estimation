@@ -32,8 +32,8 @@ import getopt
 from configparser import ConfigParser
 
 """
-python train_middlelayer.py --dataset_config=config/dataset/coco2017-gpu.cfg --experiment_config=config/training/experiment01.cfg
-python train_middlelayer.py --dataset_config=config/dataset/ai_challenger-gpu.cfg --experiment_config=config/training/experiment01.cfg
+python train.py --dataset_config=config/dataset/coco2017-gpu.cfg --experiment_config=config/training/experiment01.cfg
+python train.py --dataset_config=config/dataset/ai_challenger-gpu.cfg --experiment_config=config/training/experiment01.cfg
 """
 
 argv = sys.argv[1:]
@@ -90,6 +90,7 @@ output_experiment_name = config_output["experiment_name"]  # "experiment01"
 sub_experiment_name = config_output["sub_experiment_name"]  # "basic"
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
 model_name = config_model["model_name"]  # "simplepose"
+model_subname = config_model["model_subname"]
 output_name = f"{current_time}_{model_name}_{sub_experiment_name}"
 output_path = os.path.join(output_root_path, output_experiment_name, dataset_directory_name)
 output_log_path = os.path.join(output_path, "logs", output_name)
@@ -225,11 +226,10 @@ if __name__ == '__main__':
     # ================================================
     # =============== build model ====================
     # ================================================
-    # from models.mv2_cpm import build_mv2_cpm_model
-    # model = build_mv2_cpm_model(number_of_keypoints=number_of_keypoints)
-    from models.simplepose_coco import simplepose_resnet50b_coco as simpleposemodel
-    model = simpleposemodel(keypoints=number_of_keypoints)
-    model.return_heatmap = True
+    from model_provider import get_model
+    model = get_model(model_name=model_name,
+                      model_subname="",
+                      number_of_keypoints=number_of_keypoints)
 
     loss_object = tf.keras.losses.MeanSquaredError()
     optimizer = tf.keras.optimizers.Adam(config_training["learning_rate"], epsilon=config_training["epsilon"])
