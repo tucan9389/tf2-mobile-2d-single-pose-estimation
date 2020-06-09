@@ -76,7 +76,7 @@ for key in parser["model"]:
     config_model[key] = eval(parser["model"][key])
 config_training = {}
 for key in parser["training"]:
-    config_training[key] = eval(parser["training"][key])
+    config_tsave_modelraining[key] = eval(parser["training"][key])
 config_output = {}
 for key in parser["output"]:
     config_output[key] = eval(parser["output"][key])
@@ -312,7 +312,7 @@ if __name__ == '__main__':
 
 
     # last model save
-    save_model(step=step, label="final")
+    save_model(model, step=step, label="final")
 
     # last pckh
     pckh_score = calculate_total_pckh(saved_model_path=saved_model_path,
