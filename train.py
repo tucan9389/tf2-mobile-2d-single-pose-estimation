@@ -76,7 +76,7 @@ for key in parser["model"]:
     config_model[key] = eval(parser["model"][key])
 config_training = {}
 for key in parser["training"]:
-    config_tsave_modelraining[key] = eval(parser["training"][key])
+    config_training[key] = eval(parser["training"][key])
 config_output = {}
 for key in parser["output"]:
     config_output[key] = eval(parser["output"][key])
