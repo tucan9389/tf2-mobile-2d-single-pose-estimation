@@ -312,7 +312,7 @@ if __name__ == '__main__':
 
 
     # last model save
-    save_model(model, step=step, label="final")
+    saved_model_path = save_model(model, step=step, label="final")
 
     # last pckh
     pckh_score = calculate_total_pckh(saved_model_path=saved_model_path,
