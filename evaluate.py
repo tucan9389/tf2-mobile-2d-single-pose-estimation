@@ -34,8 +34,8 @@ def convert_heatmaps_to_keypoints(heatmaps, image_size):
 
 head_index = 0
 neck_index = 1
-# kp_sequences = [1, 2, 4, 6, 8, 3, 5, 7, 10, 12, 14, 9, 11, 13]
-kp_sequences = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+kp_sequences = [1, 2, 4, 6, 8, 3, 5, 7, 10, 12, 14, 9, 11, 13]
+# kp_sequences = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 def calculate_pckh(original_image_shape, keypoint_info, pred_heatmaps, distance_ratio=0.5):
     number_of_keypoints = pred_heatmaps.shape[-1]
 
