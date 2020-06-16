@@ -228,7 +228,7 @@ if __name__ == '__main__':
     # ================================================
     from model_provider import get_model
     model = get_model(model_name=model_name,
-                      model_subname="",
+                      model_subname=model_subname,
                       number_of_keypoints=number_of_keypoints)
 
     loss_object = tf.keras.losses.MeanSquaredError()

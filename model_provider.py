@@ -58,3 +58,7 @@ def _get_cpm_model(model_subname="", number_of_keypoints=14):
 def _get_hourglass_model(model_subname="", number_of_keypoints=14):
     from models import mv2_hourglass
     return mv2_hourglass.build_mv2_hourglass_model(number_of_keypoints=number_of_keypoints)
+
+if __name__ == '__main__':
+    my_model = get_model(model_name="simplepose", model_subname="mobilenetv2")
+    my_model.summary()

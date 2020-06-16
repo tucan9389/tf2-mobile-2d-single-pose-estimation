@@ -303,7 +303,7 @@ def get_simplepose(backbone,
 def simplepose_mobilenetv2_coco(keypoints=17, data_format="channels_last", **kwargs):
     backbone = tf.keras.applications.MobileNetV2()
     return get_simplepose(backbone, backbone_out_channels=512, keypoints=keypoints,
-                          model_name="simplepose_resnet18_coco", data_format=data_format, **kwargs)
+                          model_name="simplepose_mobilenetv2_coco", data_format=data_format, **kwargs)
 
 
 def simplepose_resnet18_coco(pretrained_backbone=False, keypoints=17, data_format="channels_last", **kwargs):
