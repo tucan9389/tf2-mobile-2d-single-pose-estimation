@@ -11,6 +11,7 @@ __all__ = ['MobileNet', 'mobilenet_w1', 'mobilenet_w3d4', 'mobilenet_wd2', 'mobi
 
 import os
 import tensorflow as tf
+tf.random.set_seed(3)
 import tensorflow.keras.layers as nn
 from .common import conv3x3_block, dwsconv3x3_block, flatten
 

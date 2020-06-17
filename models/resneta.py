@@ -7,6 +7,7 @@ __all__ = ['ResNetA', 'resneta50b', 'resneta101b', 'resneta152b']
 
 import os
 import tensorflow as tf
+tf.random.set_seed(3)
 import tensorflow.keras.layers as nn
 from .common import conv1x1_block, AvgPool2d, is_channels_first
 from .resnet import ResBlock, ResBottleneck

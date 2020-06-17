@@ -7,6 +7,7 @@ __all__ = ['ResNetD', 'resnetd50b', 'resnetd101b', 'resnetd152b']
 
 import os
 import tensorflow as tf
+tf.random.set_seed(3)
 import tensorflow.keras.layers as nn
 from .common import MultiOutputSequential, is_channels_first
 from .resnet import ResUnit, ResInitBlock

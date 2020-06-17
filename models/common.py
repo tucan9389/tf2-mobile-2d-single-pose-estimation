@@ -15,6 +15,7 @@ import math
 from inspect import isfunction
 import numpy as np
 import tensorflow as tf
+tf.random.set_seed(3)
 import tensorflow.keras.layers as nn
 
 

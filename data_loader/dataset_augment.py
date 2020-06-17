@@ -4,24 +4,16 @@
 # @FileName: dataset_augument.py
 # @Software: PyCharm
 # @updated by Jaewook Kang 20181010 for tf-tiny-pose-estimation
+# @updated by Doyoung Gwak 20200607 for tf2-mobile-pose-estimation
 
 import math
 import random
+random.seed(3)
 
 import cv2
 import numpy as np
 from tensorpack.dataflow.imgaug.geometry import RotationAndCropValid
 from enum import Enum
-
-# custom addition for tf-tiny-pose-estimation
-from config.model_config import ModelConfig
-
-model_config = ModelConfig()
-
-_network_w = int(model_config.input_size)
-_network_h = _network_w
-_scale = int(model_config.input_size / model_config.output_size)
-
 
 class CocoPart(Enum):
     Top = 0
@@ -39,24 +31,6 @@ class CocoPart(Enum):
     LKnee = 12
     LAnkle = 13
     Background = 14  # Background is not used
-
-
-# ---------------------------------------
-# not used
-# def set_network_input_wh(w, h):
-#     global _network_w, _network_h
-#     _network_w, _network_h = w, h
-#
-#
-# def set_network_scale(scale):
-#     global _scale
-#     _scale = scale
-#
-#
-# def get_network_output_wh():
-#     return _network_w // _scale, _network_h // _scale
-# ---------------------------------------
-
 
 def pose_random_scale(meta):
     scalew = random.uniform(0.8, 1.2)
@@ -83,9 +57,9 @@ def pose_random_scale(meta):
     return meta
 
 
-def pose_rotation(meta, preproc_config):
-    deg = random.uniform(preproc_config.MIN_AUGMENT_ROTATE_ANGLE_DEG, \
-                         preproc_config.MAX_AUGMENT_ROTATE_ANGLE_DEG)
+def pose_rotation(meta, config_preproc):
+    deg = random.uniform(config_preproc["rotate_min_degree"], \
+                         config_preproc["rotate_max_degree"])
     img = meta.img
 
     center = (img.shape[1] * 0.5, img.shape[0] * 0.5)  # x, y
@@ -156,16 +130,16 @@ def pose_flip(meta):
     return meta
 
 
-def pose_resize_shortestedge_random(meta):
-    ratio_w = float(_network_w) / float(meta.width)
-    ratio_h = float(_network_h) / float(meta.height)
+def pose_resize_shortestedge_random(meta, config_model):
+    ratio_w = float(config_model["input_width"]) / float(meta.width)
+    ratio_h = float(config_model["input_height"]) / float(meta.height)
     ratio = min(ratio_w, ratio_h)
 
     target_size = int(min(meta.width * ratio + 0.5, meta.height * ratio + 0.5))
     target_size = int(target_size * random.uniform(0.95, 1.2))
 
     # target_size = int(min(_network_w, _network_h) * random.uniform(0.7, 1.5))
-    return pose_resize_shortestedge(meta, target_size)
+    return pose_resize_shortestedge(meta=meta, target_size=target_size, config_model=config_model)
 
 
 def _rotate_coord(shape, newxy, point, angle):
@@ -188,8 +162,7 @@ def _rotate_coord(shape, newxy, point, angle):
     return int(qx + 0.5), int(qy + 0.5)
 
 
-def pose_resize_shortestedge(meta, target_size):
-    global _network_w, _network_h
+def pose_resize_shortestedge(meta, target_size, config_model):
     img = meta.img
 
     # adjust image
@@ -203,11 +176,11 @@ def pose_resize_shortestedge(meta, target_size):
     dst = cv2.resize(img, (neww, newh), interpolation=cv2.INTER_AREA)
 
     pw = ph = 0
-    if neww < _network_w or newh < _network_h:
-        pw = max(0, (_network_w - neww) // 2)
-        ph = max(0, (_network_h - newh) // 2)
-        mw = (_network_w - neww) % 2
-        mh = (_network_h - newh) % 2
+    if neww < config_model["input_width"] or newh < config_model["input_height"]:
+        pw = max(0, (config_model["input_width"] - neww) // 2)
+        ph = max(0, (config_model["input_height"] - newh) // 2)
+        mw = (config_model["input_width"] - neww) % 2
+        mh = (config_model["input_height"] - newh) % 2
         color1 = random.randint(0, 255)
         color2 = random.randint(0, 255)
         color3 = random.randint(0, 255)
@@ -264,9 +237,8 @@ def pose_crop(meta, x, y, w, h):
     return meta
 
 
-def pose_crop_random(meta):
-    global _network_w, _network_h
-    target_size = (_network_w, _network_h)
+def pose_crop_random(meta, config_model):
+    target_size = (config_model["input_width"], config_model["input_height"])
     for _ in range(50):
         x = random.randrange(0, meta.width - target_size[0]) if meta.width > target_size[0] else 0
         y = random.randrange(0, meta.height - target_size[1]) if meta.height > target_size[1] else 0
@@ -289,36 +261,35 @@ def pose_crop_random(meta):
     return pose_crop(meta, x, y, target_size[0], target_size[1])
 
 
-def pose_to_img(meta_l):
-    global _network_w, _network_h, _scale
+def pose_to_img(meta_l, config_model):
+    # global _network_w, _network_h, _scale
     # return meta_l.img.astype(np.float32), \
     #        meta_l.get_heatmap(target_size=(_network_w // _scale, _network_h // _scale)).astype(np.float32)
     return meta_l.img.astype(np.float32), \
-           meta_l.get_heatmap(target_size=(model_config.output_size, model_config.output_size)).astype(np.float32)
+           meta_l.get_heatmap(target_size=(config_model["output_height"], config_model["output_width"])).astype(np.float32)
     # return meta_l.img.astype(np.float32), \
     #        meta_l.get_heatmap(target_size=(model_config.output_size, model_config.output_size)).astype(np.float32)
 
 
-def preprocess_image(img_meta_data, preproc_config):
-    if preproc_config.is_scale:
+def preprocess_image(img_meta_data, config_model, config_preproc):
+    if config_preproc["is_scale"]:
         img_meta_data = pose_random_scale(img_meta_data)
 
-    if preproc_config.is_rotate:
-        img_meta_data = pose_rotation(img_meta_data, preproc_config)
+    if config_preproc["is_rotate"]:
+        img_meta_data = pose_rotation(img_meta_data, config_preproc)
 
-    if preproc_config.is_flipping:
+    if config_preproc["is_flipping"]:
         img_meta_data = pose_flip(img_meta_data)
 
-    if preproc_config.is_resize_shortest_edge:
-        img_meta_data = pose_resize_shortestedge_random(img_meta_data)
+    if config_preproc["is_resize_shortest_edge"]:
+        img_meta_data = pose_resize_shortestedge_random(img_meta_data, config_model=config_model)
 
-    if preproc_config.is_crop:
-        img_meta_data = pose_crop_random(img_meta_data)
+    if config_preproc["is_crop"]:
+        img_meta_data = pose_crop_random(meta=img_meta_data, config_model=config_model)
     else:
-        global _network_w, _network_h
-        target_size = (_network_w, _network_h)
+        target_size = (config_model["input_width"], config_model["input_height"])
         pose_crop(img_meta_data, 0, 0, target_size[0], target_size[1])
 
-    images, labels = pose_to_img(img_meta_data)
+    images, labels = pose_to_img(img_meta_data, config_model=config_model)
 
     return images, labels

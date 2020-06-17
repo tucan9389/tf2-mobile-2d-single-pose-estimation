@@ -20,9 +20,8 @@
 
 from __future__ import absolute_import, division, print_function
 
-import sys
-
 import tensorflow as tf
+tf.random.set_seed(3)
 import os
 
 from pycocotools.coco import COCO
@@ -30,6 +29,7 @@ from pycocotools.coco import COCO
 # for coco dataset
 from data_loader import dataset_augment
 from data_loader.dataset_prepare import CocoMetadata
+
 
 class DataLoader(object):
     """Generates DataSet input_fn for training or evaluation
@@ -43,29 +43,24 @@ class DataLoader(object):
     """
 
     def __init__(self,
-                 train_config,
-                 model_config,
-                 preproc_config,
+                 config_training,
+                 config_model,
+                 config_preproc,
                  images_dir_path,
-                 annotation_json_path,
-                 transpose_input=False,
-                 use_bfloat16=False):
+                 annotation_json_path):
 
         self.image_preprocessing_fn = dataset_augment.preprocess_image
-        self.use_bfloat16 = use_bfloat16
         self.images_dir_path = images_dir_path
         self.annotation_json_path = annotation_json_path
         self.annotations_info = None
-        self.train_config = train_config
-        self.model_config = model_config
-        self.preproc_config = preproc_config
+        self.config_training = config_training
+        self.config_model = config_model
+        self.config_preproc = config_preproc
 
         if images_dir_path == 'null' or images_dir_path == '' or images_dir_path is None:
             exit(1)
         if annotation_json_path == 'null' or annotation_json_path == '' or annotation_json_path is None:
             exit(1)
-
-        self.transpose_input = transpose_input
 
         self.annotations_info = COCO(self.annotation_json_path)
 
@@ -75,18 +70,16 @@ class DataLoader(object):
         self.imgIds = self.annotations_info.getImgIds()
 
     def _set_shapes(self, img, heatmap):
+        img.set_shape([self.config_training["batch_size"],
+                       self.config_model["input_height"],
+                       self.config_model["input_width"],
+                       3])
 
-        batch_size = self.train_config.batch_size
-
-        img.set_shape([batch_size,
-                       self.model_config.input_size,
-                       self.model_config.input_size,
-                       self.model_config.input_chnum])
-
-        heatmap.set_shape([batch_size,
-                           self.model_config.output_size,
-                           self.model_config.output_size,
+        heatmap.set_shape([self.config_training["batch_size"],
+                           self.config_model["output_height"],
+                           self.config_model["output_width"],
                            self.number_of_keypoints])
+
         return img, heatmap
 
     def _parse_function(self, imgId, ann=None):
@@ -116,11 +109,12 @@ class DataLoader(object):
                                      img_meta=image_info,
                                      keypoint_infos=keypoint_infos,
                                      number_of_heatmap=self.number_of_keypoints,
-                                     sigma=self.preproc_config.heatmap_std)
+                                     sigma=self.config_preproc["heatmap_std"])
 
         # print('joint_list = %s' % img_meta_data.joint_list)
         images, labels = self.image_preprocessing_fn(img_meta_data=img_meta_data,
-                                                     preproc_config=self.preproc_config)
+                                                     config_model=self.config_model,
+                                                     config_preproc=self.config_preproc)
 
         return images, labels
 
@@ -142,19 +136,19 @@ class DataLoader(object):
                     func=self._parse_function,
                     inp=[imgId],
                     Tout=[tf.float32, tf.float32])),
-            batch_size=self.train_config.batch_size,
-            num_parallel_calls=self.train_config.multiprocessing_num,
+            batch_size=self.config_training["batch_size"],
+            num_parallel_calls=self.config_training["multiprocessing_num"],
             drop_remainder=True))
 
         # cache entire dataset in memory after preprocessing
         # dataset = dataset.cache() # do not use this code for OOM problem
 
         dataset = dataset.map(self._set_shapes,
-                              num_parallel_calls=self.train_config.multiprocessing_num)
+                              num_parallel_calls=self.config_training["multiprocessing_num"])
 
         # Prefetch overlaps in-feed with training
         # dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE) # tf.data.experimental.AUTOTUNE have to be upper than 1.13
-        dataset = dataset.prefetch(buffer_size=self.train_config.batch_size * 3)
+        dataset = dataset.prefetch(buffer_size=self.config_training["batch_size"] * 3)
         # tf.logging.info('[Input_fn] dataset pipeline building complete')
 
         return dataset
