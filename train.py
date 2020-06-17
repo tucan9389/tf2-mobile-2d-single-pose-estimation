@@ -74,6 +74,9 @@ for key in parser["preprocessing"]:
 config_model = {}
 for key in parser["model"]:
     config_model[key] = eval(parser["model"][key])
+config_extra = {}
+for key in parser["extra"]:
+    config_extra[key] = eval(parser["extra"][key])
 config_training = {}
 for key in parser["training"]:
     config_training[key] = eval(parser["training"][key])
@@ -104,13 +107,13 @@ train_summary_writer = tf.summary.create_file_writer(output_log_path)
 @tf.function
 def train_step(model, images, labels):
     with tf.GradientTape() as tape:
-        model_output = model(images, training=False)
+        model_output = model(images)
         predictions_layers = model_output
         losses = [loss_object(labels, predictions) for predictions in predictions_layers]
         total_loss = tf.math.add_n(losses)
-    
+
     max_val = tf.math.reduce_max(predictions_layers[-1])
-    
+
     gradients = tape.gradient(total_loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(total_loss)
@@ -229,7 +232,8 @@ if __name__ == '__main__':
     from model_provider import get_model
     model = get_model(model_name=model_name,
                       model_subname=model_subname,
-                      number_of_keypoints=number_of_keypoints)
+                      number_of_keypoints=number_of_keypoints,
+                      config_extra=config_extra)
 
     loss_object = tf.keras.losses.MeanSquaredError()
     optimizer = tf.keras.optimizers.Adam(config_training["learning_rate"], epsilon=config_training["epsilon"])

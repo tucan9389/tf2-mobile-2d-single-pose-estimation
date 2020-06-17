@@ -17,53 +17,62 @@ from tensorflow.keras import models
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
 
-l2_regularizer_00004 = regularizers.l2(0.00004)
+class InvertedBottleneck(layers.Layer):
+    def __init__(self, up_channel_rate, channels, is_subsample, kernel_size):
+        super(InvertedBottleneck, self).__init__()
 
-def _inverted_bottleneck(input, up_channel_rate, channels, is_subsample, kernel_size):
-    if is_subsample:
-        strides = (2, 2)
-    else:
-        strides = (1, 1)
+        self.up_channel_rate = up_channel_rate
+        self.l2_regularizer_00004 = regularizers.l2(0.00004)
+        strides = (2, 2) if is_subsample else (1, 1)
+        kernel_size = (kernel_size, kernel_size)
+        self.dw_conv = layers.DepthwiseConv2D(kernel_size=kernel_size, strides=strides, padding="SAME",
+                               kernel_regularizer=self.l2_regularizer_00004)
+        self.conv1 = layers.Conv2D(filters=3, kernel_size=(1, 1), strides=(1, 1), padding='SAME')
+        self.conv2 = layers.Conv2D(filters=channels, kernel_size=(1, 1), strides=(1, 1), padding='SAME')
 
-    kernel_size = (kernel_size, kernel_size)
+        self.bn1 = layers.BatchNormalization(momentum=0.999)
+        self.bn2 = layers.BatchNormalization(momentum=0.999)
+        self.relu = layers.ReLU()
+        self.relu6 = layers.ReLU(max_value=6)
 
-    # 1x1 conv2d
-    x = layers.Conv2D(filters=up_channel_rate * input.shape[-1], kernel_size=(1, 1), strides=(1, 1), padding='SAME')(input)
-    x = layers.BatchNormalization(momentum=0.999)(x)
-    x = layers.ReLU(max_value=6)(x)
+    def call(self, inputs, training=True):
+        # 1x1 conv2d
+        self.conv1.filters = self.up_channel_rate * inputs.shape[-1]
+        x = self.conv1(inputs)
+        x = self.bn1(x, training=training)
+        x = self.relu6(x)
 
-    # activation
-    x = layers.ReLU()(x)
+        # activation
+        x = self.relu(x)
 
-    # 3x3 separable_conv2d
-    x = layers.DepthwiseConv2D(kernel_size=kernel_size, strides=strides, padding="SAME",
-                               kernel_regularizer=l2_regularizer_00004)(x)
-    # activation
-    x = layers.ReLU()(x)
+        # 3x3 separable_conv2d
+        x = self.dw_conv(x)
+        # activation
+        x = self.relu(x)
 
-    # 1x1 conv2d
-    x = layers.Conv2D(filters=channels, kernel_size=(1, 1), strides=(1, 1), padding='SAME')(x)
-    x = layers.BatchNormalization(momentum=0.999)(x)
-    x = layers.ReLU(max_value=6)(x)
+        # 1x1 conv2d
+        x = self.conv2(x)
+        x = self.bn2(x, training=training)
+        x = self.relu6(x)
 
-    if input.shape[-1] == channels:
-        x = input + x
+        if inputs.shape[-1] == self.conv2.filters:
+            x = inputs + x
 
-    return x
+        return x
 
 def _hourglass_module(input, stage_index, number_of_keypoints):
     if stage_index == 0:
-        return _inverted_bottleneck(input, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3), []
+        return InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(input), []
     else:
         # down sample
         x = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding='SAME')(input)
 
         # block front
-        x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
-        x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
-        x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
-        x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
-        x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
+        x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(x)
+        x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(x)
+        x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(x)
+        x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(x)
+        x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(x)
 
         stage_index -= 1
 
@@ -71,7 +80,7 @@ def _hourglass_module(input, stage_index, number_of_keypoints):
         x, middle_layers = _hourglass_module(x, stage_index=stage_index, number_of_keypoints=number_of_keypoints)
 
         # block back
-        x = _inverted_bottleneck(x, up_channel_rate=6, channels=number_of_keypoints, is_subsample=False, kernel_size=3)
+        x = InvertedBottleneck(x, up_channel_rate=6, channels=number_of_keypoints, is_subsample=False, kernel_size=3)(x)
 
         # up sample
         upsampling_size = (2, 2)  # (x.shape[1] * 2, x.shape[2] * 2)
@@ -79,11 +88,11 @@ def _hourglass_module(input, stage_index, number_of_keypoints):
         upsampling_layer = x
 
         # jump layer
-        x = _inverted_bottleneck(input, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
-        x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
-        x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
-        x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
-        x = _inverted_bottleneck(x, up_channel_rate=6, channels=number_of_keypoints, is_subsample=False, kernel_size=3)
+        x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(input)
+        x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(x)
+        x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(x)
+        x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(x)
+        x = InvertedBottleneck(up_channel_rate=6, channels=number_of_keypoints, is_subsample=False, kernel_size=3)(x)
         jump_branch_layer = x
 
         # add
@@ -100,6 +109,7 @@ def build_mv2_hourglass_model(number_of_keypoints):
 
     ## HEADER
     # cnn with regularizer
+    l2_regularizer_00004 = regularizers.l2(0.00004)
     x = layers.Conv2D(filters=16, kernel_size=(3, 3), strides=(2, 2), padding='SAME', kernel_regularizer=l2_regularizer_00004)(input)
     # batch norm
     x = layers.BatchNormalization(momentum=0.999)(x)
@@ -107,15 +117,15 @@ def build_mv2_hourglass_model(number_of_keypoints):
     x = layers.ReLU(max_value=6)(x)
 
     # 128, 112
-    x = _inverted_bottleneck(x, up_channel_rate=1, channels=16, is_subsample=False, kernel_size=3)
-    x = _inverted_bottleneck(x, up_channel_rate=1, channels=16, is_subsample=False, kernel_size=3)
+    x = InvertedBottleneck(up_channel_rate=1, channels=16, is_subsample=False, kernel_size=3)(x)
+    x = InvertedBottleneck(up_channel_rate=1, channels=16, is_subsample=False, kernel_size=3)(x)
 
     # 64, 56
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=True, kernel_size=3)
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
-    x = _inverted_bottleneck(x, up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)
+    x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=True, kernel_size=3)(x)
+    x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(x)
+    x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(x)
+    x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(x)
+    x = InvertedBottleneck(up_channel_rate=6, channels=24, is_subsample=False, kernel_size=3)(x)
 
 
     captured_h, captured_w = int(x.shape[1]), int(x.shape[2])
