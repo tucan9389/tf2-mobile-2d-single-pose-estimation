@@ -33,6 +33,8 @@ def _get_simplepose_model(model_subname="", number_of_keypoints=14, config_extra
     if model_subname == "mobilenetv2":
         # mv2_alpha: `0.35`,`0.50`,`0.75`,`1.0`,`1.3`,`1.4`
         model = simplepose_coco.simplepose_mobilenetv2_coco(keypoints=number_of_keypoints, mv2_alpha=1.0)
+    elif model_subname == "mv2":
+        model = simplepose_coco.simplepose_mv2_coco(keypoints=number_of_keypoints)
     elif model_subname == "resnet18":
         model = simplepose_coco.simplepose_resnet18_coco(keypoints=number_of_keypoints)
     elif model_subname == "resnet50b":
