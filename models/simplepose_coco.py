@@ -300,6 +300,12 @@ def get_simplepose(backbone,
     return net
 
 
+def simplepose_mobilenetv2_coco(keypoints=17, data_format="channels_last", **kwargs):
+    backbone = tf.keras.applications.MobileNetV2(include_top=False)
+    return get_simplepose(backbone, backbone_out_channels=512, keypoints=keypoints,
+                          model_name="simplepose_mobilenetv2_coco", data_format=data_format, **kwargs)
+
+
 def simplepose_resnet18_coco(pretrained_backbone=False, keypoints=17, data_format="channels_last", **kwargs):
     """
     SimplePose model on the base of ResNet-18 for COCO Keypoint from 'Simple Baselines for Human Pose Estimation and
