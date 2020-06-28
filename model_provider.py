@@ -57,7 +57,17 @@ def _get_simplepose_model(model_subname="", number_of_keypoints=14, config_extra
 def _get_cpm_model(model_subname="", number_of_keypoints=14, config_extra={}):
     from models import mv2_cpm
     number_of_stages = config_extra["number_of_stages"]
-    return mv2_cpm.ConvolutionalPoseMachine(number_of_keypoints=number_of_keypoints, number_of_stages=number_of_stages)
+    backbone = _get_cpm_backbone(backbone=config_extra['backbone'])
+    return mv2_cpm.ConvolutionalPoseMachine(backbone=backbone,
+                                            number_of_keypoints=number_of_keypoints,
+                                            number_of_stages=number_of_stages)
+
+def _get_cpm_backbone(backbone='mv2'):
+    from models import mv2_cpm
+    if backbone == 'mv2_1':
+        return mv2_cpm.MobileNetV2_1()
+    else:
+        return mv2_cpm.MobileNetV2()
 
 def _get_hourglass_model(model_subname="", number_of_keypoints=14, config_extra={}):
     from models import mv2_hourglass

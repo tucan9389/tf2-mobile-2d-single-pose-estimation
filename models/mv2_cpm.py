@@ -105,9 +105,9 @@ class MobileNetV2BranchBlock(tf.keras.layers.Layer):
         for i in range(number_of_inverted_bottlenecks):
             is_subsample = False if i != 0 else True
             ib = InvertedBottleneck(up_channel_rate=self.up_channel_rate,
-                                   channels=self.channels,
-                                   is_subsample=is_subsample,
-                                   kernel_size=self.kernel_size)
+                                    channels=self.channels,
+                                    is_subsample=is_subsample,
+                                    kernel_size=self.kernel_size)
             self.ibs.append(ib)
 
     def call(self, inputs):
@@ -167,6 +167,56 @@ class MobileNetV2(tf.keras.layers.Layer):
 
         return x
 
+class MobileNetV2_1(tf.keras.layers.Layer):
+    def __init__(self):
+        super(MobileNetV2_1, self).__init__()
+
+        self.front_ib1 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
+        self.front_ib2 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
+
+        self.branch1 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
+                                              up_channel_rate=6, channels=18, kernel_size=3)
+        self.branch2 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
+                                              up_channel_rate=6, channels=24, kernel_size=3)
+        self.branch3 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
+                                              up_channel_rate=6, channels=48, kernel_size=3)
+        self.branch4 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
+                                              up_channel_rate=6, channels=72, kernel_size=3)
+
+        # self.max_pool4x4 = layers.MaxPool2D(pool_size=(4, 4), strides=(4, 4), padding='SAME')
+        self.max_pool2x2 = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding='SAME')
+        self.upsampleing2x2 = layers.UpSampling2D(size=(2, 2), interpolation='bilinear')
+        self.upsampleing4x4 = layers.UpSampling2D(size=(4, 4), interpolation='bilinear')
+        self.upsampleing8x8 = layers.UpSampling2D(size=(8, 8), interpolation='bilinear')
+        self.concat = layers.Concatenate(axis=3)
+
+    def call(self, inputs):
+        x = self.front_ib1(inputs)
+        x = self.front_ib2(x)
+        mv2_branch_0 = x
+
+        x = self.branch1(x)
+        mv2_branch_1 = x
+
+        x = self.branch2(x)
+        mv2_branch_2 = x
+
+        x = self.branch3(x)
+        mv2_branch_3 = x
+
+        x = self.branch4(x)
+        mv2_branch_4 = x
+
+        x = self.concat([
+            self.max_pool2x2(mv2_branch_0),
+            mv2_branch_1,
+            self.upsampleing2x2(mv2_branch_2),
+            self.upsampleing4x4(mv2_branch_3),
+            self.upsampleing8x8(mv2_branch_4)
+        ])
+
+        return x
+
 
 class CPMStageBlock(tf.keras.layers.Layer):
     def __init__(self, kernel_size, lastest_channel_size, number_of_keypoints):
@@ -190,7 +240,7 @@ class CPMStageBlock(tf.keras.layers.Layer):
         return x
 
 class ConvolutionalPoseMachine(tf.keras.models.Model):
-    def __init__(self, number_of_stages, number_of_keypoints):
+    def __init__(self, backbone, number_of_stages, number_of_keypoints):
         super(ConvolutionalPoseMachine, self).__init__()
 
         self.number_of_stages = number_of_stages
@@ -201,7 +251,8 @@ class ConvolutionalPoseMachine(tf.keras.models.Model):
                       kernel_regularizer=self.l2_regularizer_00004)
         self.bn = layers.BatchNormalization(momentum=0.999)
 
-        self.mobilenetv2 = MobileNetV2()
+        # self.mobilenetv2 = MobileNetV2_1()  # MobileNetV2()
+        self.backbone = backbone
         self.concat = layers.Concatenate(axis=3)
 
         self.cpm_stage_blocks = []
@@ -221,7 +272,8 @@ class ConvolutionalPoseMachine(tf.keras.models.Model):
         x = self.bn(x)
         x = self.relu6(x)
 
-        x = self.mobilenetv2(x)
+        # x = self.mobilenetv2(x)
+        x = self.backbone(x)
 
         decoder_input = x
         middle_output_layers = []
