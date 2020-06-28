@@ -66,6 +66,8 @@ def _get_cpm_backbone(backbone='mv2'):
     from models import mv2_cpm
     if backbone == 'mv2_1':
         return mv2_cpm.MobileNetV2_1()
+    elif backbone == 'mv2_2':
+        return mv2_cpm.MobileNetV2_2()
     else:
         return mv2_cpm.MobileNetV2()
 
