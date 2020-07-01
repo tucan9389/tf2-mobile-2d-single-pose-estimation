@@ -64,10 +64,18 @@ def _get_cpm_model(model_subname="", number_of_keypoints=14, config_extra={}):
 
 def _get_cpm_backbone(backbone='mv2'):
     from models import mv2_cpm
-    if backbone == 'mv2_1':
-        return mv2_cpm.MobileNetV2_1()
-    elif backbone == 'mv2_2':
-        return mv2_cpm.MobileNetV2_2()
+    if backbone == 'backbone_1':
+        return mv2_cpm.Backbone_1()
+    elif backbone == 'backbone_2':
+        return mv2_cpm.Backbone_2()
+    elif backbone == 'backbone_3_1':
+        return mv2_cpm.Backbone_3_1()
+    elif backbone == 'backbone_3_2':
+        return mv2_cpm.Backbone_3_2()
+    elif backbone == 'backbone_3_3':
+        return mv2_cpm.Backbone_3_3()
+    elif backbone == 'backbone_3_4':
+        return mv2_cpm.Backbone_3_4()
     else:
         return mv2_cpm.MobileNetV2()
 

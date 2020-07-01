@@ -57,7 +57,7 @@ class InvertedBottleneck(tf.keras.layers.Layer):
         x = self.bn2(x, training=training)
         x = self.relu6(x)
 
-        if inputs.shape[-1] == self.conv2.filters:
+        if inputs.shape[-1] == x.shape[-1] and inputs.shape[-2] == x.shape[-2] and inputs.shape[-3] == x.shape[-3]:
             x = inputs + x
 
         return x
@@ -92,18 +92,18 @@ class SeparableConv2D(tf.keras.layers.Layer):
         return x
 
 
-class MobileNetV2BranchBlock(tf.keras.layers.Layer):
-    def __init__(self, number_of_inverted_bottlenecks, up_channel_rate, channels, kernel_size):
-        super(MobileNetV2BranchBlock, self).__init__()
+class BranchBlock(tf.keras.layers.Layer):
+    def __init__(self, ibs_is_subsamples, up_channel_rate, channels, kernel_size):
+        super(BranchBlock, self).__init__()
 
-        self.number_of_inverted_bottlenecks = number_of_inverted_bottlenecks
+        self.number_of_inverted_bottlenecks = len(ibs_is_subsamples)
+        self.ibs_is_subsamples = ibs_is_subsamples
         self.up_channel_rate = up_channel_rate
         self.channels = channels
         self.kernel_size = kernel_size
 
         self.ibs = []
-        for i in range(number_of_inverted_bottlenecks):
-            is_subsample = False if i != 0 else True
+        for is_subsample in self.ibs_is_subsamples:
             ib = InvertedBottleneck(up_channel_rate=self.up_channel_rate,
                                     channels=self.channels,
                                     is_subsample=is_subsample,
@@ -125,14 +125,14 @@ class MobileNetV2(tf.keras.layers.Layer):
         self.front_ib1 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
         self.front_ib2 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
 
-        self.branch1 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=18, kernel_size=3)
-        self.branch2 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=24, kernel_size=3)
-        self.branch3 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=48, kernel_size=3)
-        self.branch4 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=72, kernel_size=3)
+        self.branch1 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=18, kernel_size=3)
+        self.branch2 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False, False],
+                                   up_channel_rate=6, channels=24, kernel_size=3)
+        self.branch3 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False, False],
+                                   up_channel_rate=6, channels=48, kernel_size=3)
+        self.branch4 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False, False],
+                                   up_channel_rate=6, channels=72, kernel_size=3)
 
         self.max_pool4x4 = layers.MaxPool2D(pool_size=(4, 4), strides=(4, 4), padding='SAME')
         self.max_pool2x2 = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding='SAME')
@@ -167,21 +167,21 @@ class MobileNetV2(tf.keras.layers.Layer):
 
         return x
 
-class MobileNetV2_1(tf.keras.layers.Layer):
+class Backbone_1(tf.keras.layers.Layer):
     def __init__(self):
-        super(MobileNetV2_1, self).__init__()
+        super(Backbone_1, self).__init__()
 
         self.front_ib1 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
         self.front_ib2 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
 
-        self.branch1 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=18, kernel_size=3)
-        self.branch2 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=24, kernel_size=3)
-        self.branch3 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=48, kernel_size=3)
-        self.branch4 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=72, kernel_size=3)
+        self.branch1 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=18, kernel_size=3)
+        self.branch2 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=24, kernel_size=3)
+        self.branch3 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=48, kernel_size=3)
+        self.branch4 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=72, kernel_size=3)
 
         # self.max_pool4x4 = layers.MaxPool2D(pool_size=(4, 4), strides=(4, 4), padding='SAME')
         self.max_pool2x2 = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding='SAME')
@@ -217,21 +217,21 @@ class MobileNetV2_1(tf.keras.layers.Layer):
 
         return x
 
-class MobileNetV2_2(tf.keras.layers.Layer):
+class Backbone_2(tf.keras.layers.Layer):
     def __init__(self):
-        super(MobileNetV2_2, self).__init__()
+        super(Backbone_2, self).__init__()
 
         self.front_ib1 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
         self.front_ib2 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
 
-        self.branch1 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=18, kernel_size=3)
-        self.branch2 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=24, kernel_size=3)
-        self.branch3 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=48, kernel_size=3)
-        self.branch4 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=72, kernel_size=3)
+        self.branch1 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=18, kernel_size=3)
+        self.branch2 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=24, kernel_size=3)
+        self.branch3 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=48, kernel_size=3)
+        self.branch4 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=72, kernel_size=3)
 
         # self.max_pool4x4 = layers.MaxPool2D(pool_size=(4, 4), strides=(4, 4), padding='SAME')
         # self.max_pool2x2 = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding='SAME')
@@ -337,6 +337,247 @@ class ConvolutionalPoseMachine(tf.keras.models.Model):
 
         return middle_output_layers
 
+# Backbone_1과 같은 구조, 필터 갯수
+class Backbone_3_1(models.Model):
+    def __init__(self):
+        super(Backbone_3_1, self).__init__()
+
+        self.front_ib1 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
+        self.front_ib2 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
+
+        self.branch1 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=18, kernel_size=3)
+
+        self.branch2 = BranchBlock(ibs_is_subsamples=[True, True, False, False, False],
+                                   up_channel_rate=6, channels=24, kernel_size=3)
+
+        self.branch3 = BranchBlock(ibs_is_subsamples=[True, True, True, False, False],
+                                   up_channel_rate=6, channels=48, kernel_size=3)
+
+        self.branch4 = BranchBlock(ibs_is_subsamples=[True, True, True, True, False],
+                                   up_channel_rate=6, channels=72, kernel_size=3)
+
+        self.upsample2 = layers.UpSampling2D(size=(2, 2))
+        self.upsample4 = layers.UpSampling2D(size=(4, 4))
+        self.upsample8 = layers.UpSampling2D(size=(8, 8))
+
+        self.concat = layers.Concatenate(axis=3)
+
+    def call(self, inputs):
+        x = self.front_ib1(inputs)
+        x = self.front_ib2(x)
+
+        # print("front_ib2:", x.shape)
+
+        b1 = x
+        b1 = self.branch1(b1)
+        # print("b1:", b1.shape)
+
+        b2 = self.branch2(x)
+        b2 = self.upsample2(b2)
+        # print("b2:", b2.shape)
+
+        b3 = self.branch3(x)
+        b3 = self.upsample4(b3)
+        # print("b3:", b3.shape)
+
+        b4 = self.branch4(x)
+        b4 = self.upsample8(b4)
+        # print("b4:", b4.shape)
+
+        x = self.concat([b1, b2, b3, b4])
+
+        return x
+
+
+# maxpool and upsample
+class Backbone_3_2(models.Model):
+    def __init__(self):
+        super(Backbone_3_2, self).__init__()
+
+        self.front_ib1 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
+        self.front_ib2 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
+
+        self.branch1 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=18, kernel_size=3)
+
+        self.branch2 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=24, kernel_size=3)
+
+        self.branch3 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=48, kernel_size=3)
+
+        self.branch4 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=72, kernel_size=3)
+
+        self.maxpool2 = layers.MaxPool2D(pool_size=(2, 2))
+        self.maxpool4 = layers.MaxPool2D(pool_size=(4, 4))
+        self.maxpool8 = layers.MaxPool2D(pool_size=(8, 8))
+        self.upsample2 = layers.UpSampling2D(size=(2, 2))
+        self.upsample4 = layers.UpSampling2D(size=(4, 4))
+        self.upsample8 = layers.UpSampling2D(size=(8, 8))
+
+        self.concat = layers.Concatenate(axis=3)
+
+    def call(self, inputs):
+        x = self.front_ib1(inputs)
+        x = self.front_ib2(x)
+
+        # print("front_ib2:", x.shape)
+
+        b1 = x
+        b1 = self.branch1(b1)
+        # print("b1:", b1.shape)
+
+        b2 = self.maxpool2(x)
+        b2 = self.branch2(b2)
+        b2 = self.upsample2(b2)
+        # print("b2:", b2.shape)
+
+        b3 = self.maxpool4(x)
+        b3 = self.branch3(b3)
+        b3 = self.upsample4(b3)
+        # print("b3:", b3.shape)
+
+        b4 = self.maxpool8(x)
+        b4 = self.branch4(b4)
+        b4 = self.upsample8(b4)
+        # print("b4:", b4.shape)
+
+        x = self.concat([b1, b2, b3, b4])
+
+        return x
+
+
+# 채널 갯수를 32로 통일
+class Backbone_3_3(models.Model):
+    def __init__(self):
+        super(Backbone_3_3, self).__init__()
+
+        self.front_ib1 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
+        self.front_ib2 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
+
+        self.branch1 = BranchBlock(ibs_is_subsamples=[True, False, False, False, False],
+                                   up_channel_rate=6, channels=32, kernel_size=3)
+
+        self.branch2 = BranchBlock(ibs_is_subsamples=[True, True, False, False, False],
+                                   up_channel_rate=6, channels=32, kernel_size=3)
+
+        self.branch3 = BranchBlock(ibs_is_subsamples=[True, True, True, False, False],
+                                   up_channel_rate=6, channels=32, kernel_size=3)
+
+        self.branch4 = BranchBlock(ibs_is_subsamples=[True, True, True, True, False],
+                                   up_channel_rate=6, channels=32, kernel_size=3)
+
+        self.upsample2 = layers.UpSampling2D(size=(2, 2))
+        self.upsample4 = layers.UpSampling2D(size=(4, 4))
+        self.upsample8 = layers.UpSampling2D(size=(8, 8))
+
+        self.concat = layers.Concatenate(axis=3)
+
+    def call(self, inputs):
+        x = self.front_ib1(inputs)
+        x = self.front_ib2(x)
+
+        # print("front_ib2:", x.shape)
+
+        b1 = x
+        b1 = self.branch1(b1)
+        # print("b1:", b1.shape)
+
+        b2 = self.branch2(x)
+        b2 = self.upsample2(b2)
+        # print("b2:", b2.shape)
+
+        b3 = self.branch3(x)
+        b3 = self.upsample4(b3)
+        # print("b3:", b3.shape)
+
+        b4 = self.branch4(x)
+        b4 = self.upsample8(b4)
+        # print("b4:", b4.shape)
+
+        x = self.concat([b1, b2, b3, b4])
+
+        return x
+
+class Backbone_3_4(models.Model):
+    def __init__(self):
+        super(Backbone_3_4, self).__init__()
+
+        self.front_ib1 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
+        self.front_ib2 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
+
+        self.branch1 = BranchBlock(ibs_is_subsamples=[True, False, False, False],
+                                   up_channel_rate=6, channels=18, kernel_size=3)
+
+        self.branch2 = BranchBlock(ibs_is_subsamples=[True, True, False, False],
+                                   up_channel_rate=6, channels=24, kernel_size=3)
+
+        self.branch3 = BranchBlock(ibs_is_subsamples=[True, True, True, False],
+                                   up_channel_rate=6, channels=48, kernel_size=3)
+
+        self.branch4 = BranchBlock(ibs_is_subsamples=[True, True, True, True],
+                                   up_channel_rate=6, channels=72, kernel_size=3)
+
+        self.upsample2 = layers.UpSampling2D(size=(2, 2))
+        self.upsample4 = layers.UpSampling2D(size=(4, 4))
+        self.upsample8 = layers.UpSampling2D(size=(8, 8))
+
+        self.concat = layers.Concatenate(axis=3)
+
+    def call(self, inputs):
+        x = self.front_ib1(inputs)
+        x = self.front_ib2(x)
+
+        # print("front_ib2:", x.shape)
+
+        b1 = x
+        b1 = self.branch1(b1)
+        # print("b1:", b1.shape)
+
+        b2 = self.branch2(x)
+        b2 = self.upsample2(b2)
+        # print("b2:", b2.shape)
+
+        b3 = self.branch3(x)
+        b3 = self.upsample4(b3)
+        # print("b3:", b3.shape)
+
+        b4 = self.branch4(x)
+        b4 = self.upsample8(b4)
+        # print("b4:", b4.shape)
+
+        x = self.concat([b1, b2, b3, b4])
+
+        return x
+
 if __name__ == '__main__':
-    model = ConvolutionalPoseMachine(number_of_keypoints=14,
+    backbone = Backbone_3_1()
+    model = ConvolutionalPoseMachine(backbone=backbone,
+                                     number_of_keypoints=14,
                                      number_of_stages=4)
+    model.build(input_shape=(None, 192, 192, 3))
+    model.summary()
+
+    backbone = Backbone_3_2()
+    model = ConvolutionalPoseMachine(backbone=backbone,
+                                     number_of_keypoints=14,
+                                     number_of_stages=4)
+    model.build(input_shape=(None, 192, 192, 3))
+    model.summary()
+
+    backbone = Backbone_3_3()
+    model = ConvolutionalPoseMachine(backbone=backbone,
+                                     number_of_keypoints=14,
+                                     number_of_stages=4)
+    model.build(input_shape=(None, 192, 192, 3))
+    model.summary()
+
+    backbone = Backbone_3_4()
+    model = ConvolutionalPoseMachine(backbone=backbone,
+                                     number_of_keypoints=14,
+                                     number_of_stages=4)
+    model.build(input_shape=(None, 192, 192, 3))
+    model.summary()
+
