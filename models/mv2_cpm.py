@@ -357,9 +357,9 @@ class Backbone_3_1(models.Model):
         self.branch4 = BranchBlock(ibs_is_subsamples=[True, True, True, True, False],
                                    up_channel_rate=6, channels=72, kernel_size=3)
 
-        self.upsample2 = layers.UpSampling2D(size=(2, 2))
-        self.upsample4 = layers.UpSampling2D(size=(4, 4))
-        self.upsample8 = layers.UpSampling2D(size=(8, 8))
+        self.upsample2 = layers.UpSampling2D(size=(2, 2), interpolation='bilinear')
+        self.upsample4 = layers.UpSampling2D(size=(4, 4), interpolation='bilinear')
+        self.upsample8 = layers.UpSampling2D(size=(8, 8), interpolation='bilinear')
 
         self.concat = layers.Concatenate(axis=3)
 
@@ -413,9 +413,9 @@ class Backbone_3_2(models.Model):
         self.maxpool2 = layers.MaxPool2D(pool_size=(2, 2))
         self.maxpool4 = layers.MaxPool2D(pool_size=(4, 4))
         self.maxpool8 = layers.MaxPool2D(pool_size=(8, 8))
-        self.upsample2 = layers.UpSampling2D(size=(2, 2))
-        self.upsample4 = layers.UpSampling2D(size=(4, 4))
-        self.upsample8 = layers.UpSampling2D(size=(8, 8))
+        self.upsample2 = layers.UpSampling2D(size=(2, 2), interpolation='bilinear')
+        self.upsample4 = layers.UpSampling2D(size=(4, 4), interpolation='bilinear')
+        self.upsample8 = layers.UpSampling2D(size=(8, 8), interpolation='bilinear')
 
         self.concat = layers.Concatenate(axis=3)
 
@@ -469,9 +469,9 @@ class Backbone_3_3(models.Model):
         self.branch4 = BranchBlock(ibs_is_subsamples=[True, True, True, True, False],
                                    up_channel_rate=6, channels=32, kernel_size=3)
 
-        self.upsample2 = layers.UpSampling2D(size=(2, 2))
-        self.upsample4 = layers.UpSampling2D(size=(4, 4))
-        self.upsample8 = layers.UpSampling2D(size=(8, 8))
+        self.upsample2 = layers.UpSampling2D(size=(2, 2), interpolation='bilinear')
+        self.upsample4 = layers.UpSampling2D(size=(4, 4), interpolation='bilinear')
+        self.upsample8 = layers.UpSampling2D(size=(8, 8), interpolation='bilinear')
 
         self.concat = layers.Concatenate(axis=3)
 
@@ -520,9 +520,9 @@ class Backbone_3_4(models.Model):
         self.branch4 = BranchBlock(ibs_is_subsamples=[True, True, True, True],
                                    up_channel_rate=6, channels=72, kernel_size=3)
 
-        self.upsample2 = layers.UpSampling2D(size=(2, 2))
-        self.upsample4 = layers.UpSampling2D(size=(4, 4))
-        self.upsample8 = layers.UpSampling2D(size=(8, 8))
+        self.upsample2 = layers.UpSampling2D(size=(2, 2), interpolation='bilinear')
+        self.upsample4 = layers.UpSampling2D(size=(4, 4), interpolation='bilinear')
+        self.upsample8 = layers.UpSampling2D(size=(8, 8), interpolation='bilinear')
 
         self.concat = layers.Concatenate(axis=3)
 
