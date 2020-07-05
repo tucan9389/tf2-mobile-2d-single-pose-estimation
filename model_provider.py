@@ -82,6 +82,14 @@ def _get_cpm_backbone(backbone='mv2'):
         return mv2_cpm.Backbone_3_6()
     elif backbone == 'backbone_3_7':
         return mv2_cpm.Backbone_3_7()
+    elif backbone == 'backbone_4_1':
+        return mv2_cpm.Backbone_4_1()
+    elif backbone == 'backbone_4_2':
+        return mv2_cpm.Backbone_4_2()
+    elif backbone == 'backbone_4_3':
+        return mv2_cpm.Backbone_4_3()
+    elif backbone == 'backbone_4_4':
+        return mv2_cpm.Backbone_4_4()
     else:
         return mv2_cpm.MobileNetV2()
 

@@ -165,15 +165,101 @@ def calculate_total_pckh(saved_model_path=None,
     
     return total_score
 
+# -----------------------------------------------------------------------
+# -----------------------------------------------------------------------
+# -----------------------------------------------------------------------
+
+def calculate_total_pckh_tf2(tf2_model,
+                            input_size=(224, 224),
+                            batch_size=32,
+                            annotation_path=None,
+                            images_path=None,
+                            distance_ratio=0.5):
+    # timestamp
+    _start_time = datetime.datetime.now()
+
+    # Load annotation json
+    annotaiton_dict = json.load(open(annotation_path))
+    image_infos = {}
+    for img_info in annotaiton_dict["images"]:
+        image_infos[img_info["id"]] = img_info
+    keypoint_infos = annotaiton_dict["annotations"]
+    # category_infos = annotaiton_dict["categories"]
+
+    # Evaluate
+    # each_scores = [[] for _ in range(14)]
+    total_scores = []
+    input_batch = None
+    keypoint_info_index = 0
+    number_of_keypoint_infos = len(keypoint_infos)
+    for keypoint_info in keypoint_infos:
+        # print(keypoint_info.keys()) # ['num_keypoints', 'area', 'keypoints', 'bbox', 'image_id', 'category_id', 'id']
+        image_info = image_infos[keypoint_info["image_id"]]
+        image_path = os.path.join(images_path, image_info["file_name"])
+        # Load original image
+        original_image = cv2.imread(image_path)
+        # Resize image
+        resized_image = cv2.resize(original_image, input_size)
+        resized_image = np.array(resized_image, dtype=np.float32)
+
+        if input_batch is None:
+            input_batch = np.expand_dims(resized_image, axis=0)
+        else:
+            resized_image = np.expand_dims(resized_image, axis=0)
+            input_batch = np.concatenate((input_batch, resized_image))
+
+            if input_batch.shape[0] == batch_size or keypoint_info_index == number_of_keypoint_infos-1:
+                output_batch = tf2_model(input_batch, training=False)
+                output_batch = output_batch[-1].numpy()
+
+                for i in range(input_batch.shape[0]):
+                    pred_heatmaps = output_batch[i]
+                    pred_heatmaps = np.squeeze(pred_heatmaps)
+
+                    score = calculate_pckh(original_image_shape=original_image.shape,
+                                           keypoint_info=keypoint_info,
+                                           pred_heatmaps=pred_heatmaps,
+                                           distance_ratio=distance_ratio)
+
+                    # print(f'img_id = {keypoint_info["image_id"]}, score = {score:.3f}')
+                    total_scores.append(score)
+                input_batch = None
+
+        keypoint_info_index += 1
+
+        # print(f"{np.mean(total_scores):.2f}")
+        # batch_scores.append(score)
+
+    total_score = np.mean(total_scores)
+
+    # timestamp
+    _end_time = datetime.datetime.now()
+    _process_time = _end_time - _start_time
+
+    print(
+        f' ------> PCKh@{distance_ratio:.1f}: {total_score * 100.0:.2f}%, duration: {get_time_to_str(_process_time.total_seconds())} <------')
+
+    return total_score
+
 if __name__ == '__main__':
-    # saved_model_path = "/Volumes/tucan-SSD/ml-project/experiment002/ai_challenger/06120948_hourglass_hg/saved_model-055000"
-    tflite_model_path = "/Users/doyounggwak/projects/machine-learning/github/PoseEstimationForMobile/release/cpm_model/model.tflite"
+
+    saved_model_path = "/Volumes/tucan-SSD/ml-project/outputs/experiment007-mac/ai_challenger/07060052_cpm_backbone_4_1/saved_model-000010"
+    # tflite_model_path = "/Users/doyounggwak/projects/machine-learning/github/PoseEstimationForMobile/release/cpm_model/model.tflite"
     dataset_path = "/Volumes/tucan-SSD/datasets/ai_challenger/valid"
     annotation_path = os.path.join(dataset_path, "annotation.json")
     images_path = os.path.join(dataset_path, "images")
     distance_ratio = 0.5
 
-    calculate_total_pckh(tflite_model_path=tflite_model_path,
-                         annotation_path=annotation_path,
-                         images_path=images_path,
-                         distance_ratio=distance_ratio)
+    # calculate_total_pckh(tflite_model_path=tflite_model_path,
+    #                      annotation_path=annotation_path,
+    #                      images_path=images_path,
+    #                      distance_ratio=distance_ratio)
+
+    model = tf.keras.models.load_model(saved_model_path)
+    calculate_total_pckh_tf2(model,
+                             annotation_path=annotation_path,
+                             images_path=images_path,
+                             distance_ratio=distance_ratio)
+    # print(model.input_shape)
+    # print(model.output_shape)
+    # print(model)
