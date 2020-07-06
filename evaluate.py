@@ -192,6 +192,8 @@ def calculate_total_pckh_tf2(tf2_model,
     input_batch = None
     keypoint_info_index = 0
     number_of_keypoint_infos = len(keypoint_infos)
+    gt_keypoint_infos_batch = []
+    original_images_batch = []
     for keypoint_info in keypoint_infos:
         # print(keypoint_info.keys()) # ['num_keypoints', 'area', 'keypoints', 'bbox', 'image_id', 'category_id', 'id']
         image_info = image_infos[keypoint_info["image_id"]]
@@ -204,28 +206,34 @@ def calculate_total_pckh_tf2(tf2_model,
 
         if input_batch is None:
             input_batch = np.expand_dims(resized_image, axis=0)
+            gt_keypoint_infos_batch.append(keypoint_info)
+            original_images_batch.append(original_image)
         else:
             resized_image = np.expand_dims(resized_image, axis=0)
             input_batch = np.concatenate((input_batch, resized_image))
+            gt_keypoint_infos_batch.append(keypoint_info)
+            original_images_batch.append(original_image)
 
             if input_batch.shape[0] == batch_size or keypoint_info_index == number_of_keypoint_infos-1:
                 output_batch = tf2_model(input_batch, training=False)
-                for heatmap_tensor in output_batch:
-                    print(heatmap_tensor.name)
+                # for heatmap_tensor in output_batch:
+                #     print(heatmap_tensor)
                 output_batch = output_batch[-1].numpy()
 
-                for i in range(input_batch.shape[0]):
+                for (i, gt_keypoint_info, original_image) in zip(range(input_batch.shape[0]), gt_keypoint_infos_batch, original_images_batch):
                     pred_heatmaps = output_batch[i]
                     pred_heatmaps = np.squeeze(pred_heatmaps)
 
                     score = calculate_pckh(original_image_shape=original_image.shape,
-                                           keypoint_info=keypoint_info,
+                                           keypoint_info=gt_keypoint_info,
                                            pred_heatmaps=pred_heatmaps,
                                            distance_ratio=distance_ratio)
 
                     # print(f'img_id = {keypoint_info["image_id"]}, score = {score:.3f}')
                     total_scores.append(score)
                 input_batch = None
+                gt_keypoint_infos_batch = []
+                original_images_batch = []
 
         keypoint_info_index += 1
 
@@ -245,7 +253,7 @@ def calculate_total_pckh_tf2(tf2_model,
 
 if __name__ == '__main__':
 
-    saved_model_path = "/Volumes/tucan-SSD/ml-project/outputs/experiment007-mac/ai_challenger/07060052_cpm_backbone_4_1/saved_model-000010"
+    saved_model_path = "/Volumes/tucan-SSD/ml-project/experiment007/ai_challenger/07061234_cpm_backbone_4_1/saved_model-015000"
     # tflite_model_path = "/Users/doyounggwak/projects/machine-learning/github/PoseEstimationForMobile/release/cpm_model/model.tflite"
     dataset_path = "/Volumes/tucan-SSD/datasets/ai_challenger/valid"
     annotation_path = os.path.join(dataset_path, "annotation.json")
@@ -257,17 +265,17 @@ if __name__ == '__main__':
     #                      images_path=images_path,
     #                      distance_ratio=distance_ratio)
 
-    # model = tf.keras.models.load_model(saved_model_path)
-    # calculate_total_pckh_tf2(model,
-    #                          annotation_path=annotation_path,
-    #                          images_path=images_path,
-    #                          distance_ratio=distance_ratio)
+    model = tf.keras.models.load_model(saved_model_path)
+    calculate_total_pckh_tf2(model,
+                             annotation_path=annotation_path,
+                             images_path=images_path,
+                             distance_ratio=distance_ratio)
     # print(model.input_shape)
     # print(model.output_shape)
     # print(model)
 
-    tflite_model_path = "/Volumes/tucan-SSD/ml-project/outputs/experiment007-mac/ai_challenger/07061221_cpm_backbone_4_1/tflite/07061221_cpm_backbone_4_1-000010.tflite"
-    calculate_total_pckh(tflite_model_path=tflite_model_path,
-                         annotation_path=annotation_path,
-                         images_path=images_path,
-                         distance_ratio=distance_ratio)
+    # tflite_model_path = "/Volumes/tucan-SSD/ml-project/outputs/experiment007-mac/ai_challenger/07061221_cpm_backbone_4_1/tflite/07061221_cpm_backbone_4_1-000010.tflite"
+    # calculate_total_pckh(tflite_model_path=tflite_model_path,
+    #                      annotation_path=annotation_path,
+    #                      images_path=images_path,
+    #                      distance_ratio=distance_ratio)

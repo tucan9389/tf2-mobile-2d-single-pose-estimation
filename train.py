@@ -126,7 +126,7 @@ def val_step(step, images, heamaps):
     predictions = np.array(predictions)
     save_image_results(step, images, heamaps, predictions)
 
-# from evaluate import calculate_total_pckh_tf2
+from evaluate import calculate_total_pckh_tf2
 from evaluate import calculate_total_pckh
 
 @tf.function
@@ -294,7 +294,7 @@ if __name__ == '__main__':
 
                 if valid_pckh:
                     # print("calcuate pckh")
-                    pckh_score = calculate_total_pckh(saved_model_path=saved_model_path,
+                    pckh_score = calculate_total_pckh_tf2(tf2_model=model,
                                                           annotation_path=valid_annotation_json_filepath,
                                                           images_path=valid_images_dir_path,
                                                           distance_ratio=pckh_distance_ratio)
@@ -320,9 +320,17 @@ if __name__ == '__main__':
     saved_model_path = save_model(model, step=step, label="final")
 
     # last pckh
-    pckh_score = calculate_total_pckh(saved_model_path=saved_model_path,
-                                          annotation_path=valid_annotation_json_filepath,
-                                          images_path=valid_images_dir_path,
-                                          distance_ratio=pckh_distance_ratio)
+    tf2_pckh_score = calculate_total_pckh_tf2(tf2_model=model,
+                                              annotation_path=valid_annotation_json_filepath,
+                                              images_path=valid_images_dir_path,
+                                              distance_ratio=pckh_distance_ratio)
     with train_summary_writer.as_default():
         tf.summary.scalar(f'pckh@{pckh_distance_ratio:.1f}_score', pckh_score * 100, step=step)
+
+    # last pckh
+    tflite_pckh_score = calculate_total_pckh(saved_model_path=saved_model_path,
+                                             annotation_path=valid_annotation_json_filepath,
+                                             images_path=valid_images_dir_path,
+                                             distance_ratio=pckh_distance_ratio)
+    with train_summary_writer.as_default():
+        tf.summary.scalar(f'tflite pckh@{pckh_distance_ratio:.1f}_score', tflite_pckh_score * 100, step=step)
