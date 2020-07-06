@@ -298,6 +298,10 @@ if __name__ == '__main__':
                                                           annotation_path=valid_annotation_json_filepath,
                                                           images_path=valid_images_dir_path,
                                                           distance_ratio=pckh_distance_ratio)
+                    # pckh_score = calculate_total_pckh(saved_model_path=saved_model_path,
+                    #                                       annotation_path=valid_annotation_json_filepath,
+                    #                                       images_path=valid_images_dir_path,
+                    #                                       distance_ratio=pckh_distance_ratio)
                     with train_summary_writer.as_default():
                         tf.summary.scalar(f'pckh@{pckh_distance_ratio:.1f}_score', pckh_score * 100, step=step)
 
