@@ -210,6 +210,8 @@ def calculate_total_pckh_tf2(tf2_model,
 
             if input_batch.shape[0] == batch_size or keypoint_info_index == number_of_keypoint_infos-1:
                 output_batch = tf2_model(input_batch, training=False)
+                for heatmap_tensor in output_batch:
+                    print(heatmap_tensor.name)
                 output_batch = output_batch[-1].numpy()
 
                 for i in range(input_batch.shape[0]):
@@ -255,11 +257,17 @@ if __name__ == '__main__':
     #                      images_path=images_path,
     #                      distance_ratio=distance_ratio)
 
-    model = tf.keras.models.load_model(saved_model_path)
-    calculate_total_pckh_tf2(model,
-                             annotation_path=annotation_path,
-                             images_path=images_path,
-                             distance_ratio=distance_ratio)
+    # model = tf.keras.models.load_model(saved_model_path)
+    # calculate_total_pckh_tf2(model,
+    #                          annotation_path=annotation_path,
+    #                          images_path=images_path,
+    #                          distance_ratio=distance_ratio)
     # print(model.input_shape)
     # print(model.output_shape)
     # print(model)
+
+    tflite_model_path = "/Volumes/tucan-SSD/ml-project/outputs/experiment007-mac/ai_challenger/07061221_cpm_backbone_4_1/tflite/07061221_cpm_backbone_4_1-000010.tflite"
+    calculate_total_pckh(tflite_model_path=tflite_model_path,
+                         annotation_path=annotation_path,
+                         images_path=images_path,
+                         distance_ratio=distance_ratio)

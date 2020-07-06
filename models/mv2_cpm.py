@@ -328,11 +328,17 @@ class ConvolutionalPoseMachine(tf.keras.models.Model):
 
         decoder_input = x
         middle_output_layers = []
+        total_number_of_stage = len(self.cpm_stage_blocks)
         for stage, cpm_stage_block in enumerate(self.cpm_stage_blocks):
             if stage != 0:  # if not first stage
                 x = self.concat([decoder_input, x])
 
             x = cpm_stage_block(x)
+            if stage + 1 == total_number_of_stage:
+                x = tf.identity(x, name='heatmap_last')
+            else:
+                x = tf.identity(x, name=f'heatmap_{stage}')
+
             middle_output_layers.append(x)
 
         return middle_output_layers

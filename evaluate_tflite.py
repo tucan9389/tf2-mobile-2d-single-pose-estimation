@@ -42,9 +42,14 @@ class TFLiteModel:
 
         self.output_shape = self.output_details[output_index]['shape']
 
+        # for output_detail in self.output_details:
+        #     print(output_detail)
+
         print("model loaded")
         print(self.interpreter.get_input_details())
-        print("output_details:", self.output_details[output_index]['shape'])
+        print(self.output_details[output_index])
+        print("output_details.name:", self.output_details[output_index]['name'])
+        print("output_details.shape:", self.output_details[output_index]['shape'])
 
     def inference(self, input_data):
         # print("input_shape == input_data.shape:", self.input_shape == input_data.shape)
