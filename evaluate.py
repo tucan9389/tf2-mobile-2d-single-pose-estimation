@@ -215,10 +215,10 @@ def calculate_total_pckh_tf2(tf2_model,
             original_images_batch.append(original_image)
 
             if input_batch.shape[0] == batch_size or keypoint_info_index == number_of_keypoint_infos-1:
-                output_batch = tf2_model(input_batch, training=False)
+                output_batch = tf2_model.predict(input_batch)
                 # for heatmap_tensor in output_batch:
                 #     print(heatmap_tensor)
-                output_batch = output_batch[-1].numpy()
+                output_batch = output_batch[-1]
 
                 for (i, gt_keypoint_info, original_image) in zip(range(input_batch.shape[0]), gt_keypoint_infos_batch, original_images_batch):
                     pred_heatmaps = output_batch[i]
