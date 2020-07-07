@@ -295,6 +295,7 @@ if __name__ == '__main__':
                 if valid_pckh:
                     # print("calcuate pckh")
                     pckh_score = calculate_total_pckh_tf2(tf2_model=model,
+                                                          input_size=(config_model["input_width"], config_model["input_height"]),
                                                           annotation_path=valid_annotation_json_filepath,
                                                           images_path=valid_images_dir_path,
                                                           distance_ratio=pckh_distance_ratio)
@@ -325,6 +326,7 @@ if __name__ == '__main__':
 
     # last pckh
     tf2_pckh_score = calculate_total_pckh_tf2(tf2_model=model,
+                                              input_size=(config_model["input_width"], config_model["input_height"]),
                                               annotation_path=valid_annotation_json_filepath,
                                               images_path=valid_images_dir_path,
                                               distance_ratio=pckh_distance_ratio)
