@@ -21,6 +21,8 @@ import tensorflow as tf
 tf.random.set_seed(3)
 import numpy as np
 
+from convert_to_tflite import save_tflite
+
 def convert_heatmap_to_keypoint(heatmap, image_size):
     # heatmap = gaussian_filter(heatmap, sigma=5)
     idx = np.unravel_index(np.argmax(heatmap), heatmap.shape)
@@ -69,30 +71,6 @@ def calculate_pckh(original_image_shape, keypoint_info, pred_heatmaps, distance_
     score = np.mean(scores)
     # print(f'img_id = {keypoint_info["image_id"]}, threshold = {threshold_dist:.2f}, score = {score:.3f}')
     return score
-
-def save_tflite(saved_model_path, tflite_model_path=None):
-    if tflite_model_path is None:
-        # Make tflite dir
-        tflite_model_dir_path = os.path.join(os.path.dirname(saved_model_path), 'tflite')
-        if not os.path.exists(tflite_model_dir_path):
-            os.mkdir(tflite_model_dir_path)
-        # tflite file
-        filename = saved_model_path.split('/')[-1]
-        filename = filename.split('.')[0]
-        step = filename.split('-')[-1]
-        model_name = saved_model_path.split('/')[-2]
-        tflite_filename = f'{model_name}-{step}.tflite'
-        tflite_model_path = os.path.join(tflite_model_dir_path, tflite_filename)
-
-    # Convert the model.
-    converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_path)
-    tflite_model = converter.convert()
-    # Save the TF Lite model.
-    with tf.io.gfile.GFile(tflite_model_path, 'wb') as f:
-        f.write(tflite_model)
-
-    print(f'Saved TFLite on: {tflite_model_path}')
-    return tflite_model_path
 
 import json
 import cv2
@@ -170,11 +148,11 @@ def calculate_total_pckh(saved_model_path=None,
 # -----------------------------------------------------------------------
 
 def calculate_total_pckh_tf2(tf2_model,
-                            input_size=(224, 224),
-                            batch_size=32,
-                            annotation_path=None,
-                            images_path=None,
-                            distance_ratio=0.5):
+                             input_size=(224, 224),
+                             batch_size=32,
+                             annotation_path=None,
+                             images_path=None,
+                             distance_ratio=0.5):
     # timestamp
     _start_time = datetime.datetime.now()
 
@@ -215,10 +193,11 @@ def calculate_total_pckh_tf2(tf2_model,
             original_images_batch.append(original_image)
 
             if input_batch.shape[0] == batch_size or keypoint_info_index == number_of_keypoint_infos-1:
-                output_batch = tf2_model.predict(input_batch)
+                output_batch = tf2_model(input_batch, training=False)
                 # for heatmap_tensor in output_batch:
                 #     print(heatmap_tensor)
                 output_batch = output_batch[-1]
+                # print(output_batch.name)
 
                 for (i, gt_keypoint_info, original_image) in zip(range(input_batch.shape[0]), gt_keypoint_infos_batch, original_images_batch):
                     pred_heatmaps = output_batch[i]

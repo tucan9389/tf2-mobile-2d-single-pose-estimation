@@ -15,31 +15,28 @@
 
 import tensorflow as tf
 
-saved_model_path = "/Volumes/tucan-SSD/ml-project/simplepose/outputs/05312106_sp-ai_challenger/saved_model-5"
-tflite_model_dir = "/Volumes/tucan-SSD/ml-project/simplepose/outputs/05312106_sp-ai_challenger/tflite"
-tflite_model_filename = "mv2_hourglass-5.tflite"
-
-# from models.mv2_hourglass import build_mv2_hourglass_model
-# model = build_mv2_hourglass_model(number_of_keypoints=17)
-# model.summary()
-
-model = tf.keras.models.load_model(saved_model_path)
-model.summary()
-
-# Convert the model.
-converter = tf.lite.TFLiteConverter.from_keras_model(model)
-tflite_model = converter.convert()
-
 import os
 
-if not os.path.exists(tflite_model_dir):
-    os.mkdir(tflite_model_dir)
+def save_tflite(saved_model_path, tflite_model_path=None):
+    if tflite_model_path is None:
+        # Make tflite dir
+        tflite_model_dir_path = os.path.join(os.path.dirname(saved_model_path), 'tflite')
+        if not os.path.exists(tflite_model_dir_path):
+            os.mkdir(tflite_model_dir_path)
+        # tflite file
+        filename = saved_model_path.split('/')[-1]
+        filename = filename.split('.')[0]
+        step = filename.split('-')[-1]
+        model_name = saved_model_path.split('/')[-2]
+        tflite_filename = f'{model_name}-{step}.tflite'
+        tflite_model_path = os.path.join(tflite_model_dir_path, tflite_filename)
 
-open(os.path.join(tflite_model_dir, tflite_model_filename), "wb").write(tflite_model)
+    # Convert the model.
+    converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_path)
+    tflite_model = converter.convert()
+    # Save the TF Lite model.
+    with tf.io.gfile.GFile(tflite_model_path, 'wb') as f:
+        f.write(tflite_model)
 
-
-"""
-tflite_convert \
-  --saved_model_dir=/Volumes/tucan-SSD/ml-project/simplepose/outputs/05312106_sp-ai_challenger/saved_model-5 \
-  --output_file=/Volumes/tucan-SSD/ml-project/simplepose/outputs/05312106_sp-ai_challenger/tflite/mv2_hourglass-5.tflite
-"""
+    print(f'Saved TFLite on: {tflite_model_path}')
+    return tflite_model_path
