@@ -253,6 +253,7 @@ def get_simplepose(backbone,
                    data_format="channels_last",
                    pretrained=False,
                    root=os.path.join("~", ".tensorflow", "models"),
+                   channels=[256, 256, 256],
                    **kwargs):
     """
     Create SimplePose model with specific parameters.
@@ -274,7 +275,6 @@ def get_simplepose(backbone,
     root : str, default '~/.tensorflow/models'
         Location for keeping the model parameters.
     """
-    channels = [256, 256, 256]
 
     net = SimplePose(
         backbone=backbone,
@@ -300,10 +300,17 @@ def get_simplepose(backbone,
     return net
 
 
-def simplepose_mobilenetv2_coco(keypoints=17, data_format="channels_last", **kwargs):
-    backbone = tf.keras.applications.MobileNetV2(include_top=False)
+def simplepose_mobilenetv2_coco(mv2_alpha=1.0, keypoints=17, data_format="channels_last", **kwargs):
+    backbone = tf.keras.applications.MobileNetV2(include_top=False, alpha=mv2_alpha)
     return get_simplepose(backbone, backbone_out_channels=512, keypoints=keypoints,
                           model_name="simplepose_mobilenetv2_coco", data_format=data_format, **kwargs)
+
+
+def simplepose_mv2_coco(keypoints=17, data_format="channels_last", **kwargs):
+    from .mv2_cpm import MobileNetV2
+    backbone = MobileNetV2()
+    return get_simplepose(backbone, backbone_out_channels=256, keypoints=keypoints,
+                          model_name="simplepose_mv2_coco", data_format=data_format, channels=[256, 256], **kwargs)
 
 
 def simplepose_resnet18_coco(pretrained_backbone=False, keypoints=17, data_format="channels_last", **kwargs):

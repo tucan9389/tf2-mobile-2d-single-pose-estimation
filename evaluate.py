@@ -111,7 +111,8 @@ def calculate_total_pckh(saved_model_path=None,
     _start_time = datetime.datetime.now()
 
     # Convert to tflite
-    tflite_model_path = save_tflite(saved_model_path=saved_model_path, tflite_model_path=tflite_model_path)
+    if tflite_model_path is None:
+        tflite_model_path = save_tflite(saved_model_path=saved_model_path)
     
     # Load tflite model
     output_index = -1  # 3
@@ -165,13 +166,14 @@ def calculate_total_pckh(saved_model_path=None,
     return total_score
 
 if __name__ == '__main__':
-    saved_model_path = "/Volumes/tucan-SSD/ml-project/experiment001/ai_challenger/06022331_mv2_hourglass_basic/saved_model-347000"
+    # saved_model_path = "/Volumes/tucan-SSD/ml-project/experiment002/ai_challenger/06120948_hourglass_hg/saved_model-055000"
+    tflite_model_path = "/Users/doyounggwak/projects/machine-learning/github/PoseEstimationForMobile/release/cpm_model/model.tflite"
     dataset_path = "/Volumes/tucan-SSD/datasets/ai_challenger/valid"
     annotation_path = os.path.join(dataset_path, "annotation.json")
     images_path = os.path.join(dataset_path, "images")
     distance_ratio = 0.5
 
-    calculate_total_pckh(saved_model_path=saved_model_path,
+    calculate_total_pckh(tflite_model_path=tflite_model_path,
                          annotation_path=annotation_path,
                          images_path=images_path,
                          distance_ratio=distance_ratio)
