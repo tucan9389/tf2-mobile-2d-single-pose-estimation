@@ -11,5 +11,6 @@ opencv-python
 IPython
 tensorpack
 six
+numpy
 coremltools
 psutil
