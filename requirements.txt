@@ -1,12 +1,12 @@
-#tf-nightly-2.0-preview
-tensorflow==2.2.0
-#tensorflow-gpu==2.0.0-alpha0
+numpy
+tensorflow
 cython
 mock
 Pillow
 msgpack
 matplotlib
 pycocotools
+git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
 opencv-python
 IPython
 tensorpack
