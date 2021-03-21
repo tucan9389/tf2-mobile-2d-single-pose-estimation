@@ -82,7 +82,9 @@ In order to use the project you have to:
 1. Prepare the dataset([ai_challenger dataset](https://drive.google.com/file/d/1rZng2KiEuyb-dev3HxJFYcZU4Il1VHqj/view?usp=sharing)) and unzip.
 2. Run the model using:
 ```shell
-python train.py
+python train.py \
+--dataset_config config/dataset/coco_single_person_only-gpu.cfg \
+--experiment_config config/training/coco_single_experiment01-cpm-sg4-gpu.cfg
 ```
 
 ## Compatiable Datasets
@@ -158,7 +160,7 @@ tf2-mobile-pose-estimation
 |   └── simpleposemobile_coco.py
 ├── train.py            - the main training script
 ├── common.py 
-└── requirements.txt
+├── requirements.txt
 └── outputs             - this folder will be generated automatically when start training
     ├── 20200312-sp-ai_challenger
     |   ├── saved_model
@@ -181,9 +183,11 @@ My SSD
 - ~~Save model to saved_model~~
 - ~~Convert the model(saved_model) to TFLite model(`.tflite`)~~
 - ~~Convert the model(saved_model) to Core ML model(`.mlmodel`)~~
-- Run the model on Android
 - ~~Run the model on iOS~~
+- Release 1.0 models
+- Support distributed GPUs training
 - Make DEMO gif running on mobile device
+- Run the model on Android
 
 ## Reference
 
