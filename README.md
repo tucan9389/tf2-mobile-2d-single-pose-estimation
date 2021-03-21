@@ -53,9 +53,14 @@ source activate {env_name}
 ```shell
 cd {tf2-mobile-pose-estimation_path}
 pip install -r requirements.txt
+pip install git+https://github.com/philferriere/cocoapi.git@2929bd2ef6b451054755dfd7ceb09278f935f7ad#subdirectory=PythonAPI
 ```
 
-### Download COCO dataset.
+
+<details><summary>Download original COCO dataset.</summary>
+<p>
+
+### Download original COCO dataset
 
 Special script that will help you to download and unpack
 needed COCO datasets. Please fill COCO_DATASET_PATH with path
@@ -68,6 +73,9 @@ You can check needed path in file train.py
 python downloader.py --download-path=COCO_DATASET_PATH
 ```
 
+</p>
+</details>
+
 ## Run The Project
 
 In order to use the project you have to:
@@ -77,20 +85,49 @@ In order to use the project you have to:
 python train.py
 ```
 
+## Compatiable Datasets
+
+Dataset Name | Doanload | Size | Number of images<br>train/valid | Number of Keypoints | Note
+--- | --- | --- | --- | --- | ---
+ai challenge | [google drive](https://drive.google.com/file/d/1rZng2KiEuyb-dev3HxJFYcZU4Il1VHqj/view?usp=sharing) | 2GB | 22k/1.5k | 14 | default dataset of this repo
+coco single person only | [google drive](https://drive.google.com/file/d/1lwt3smqdJ2-ZuVCzgImEp8gw-RHuG-YR/view?usp=sharing) | 4GB | 25k/1k | 17 | filtered by showing only one person in an image which is from coco 2017 keypoint dataset
+
+- ai challenge's keypoint names: `['top_head', 'neck', 'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow', 'left_wrist', 'right_wrist', 'left_hip', 'right_hip', 'left_knee', 'right_knee', 'left_ankle', 'right_ankle']`
+- coco's keypoint names: `['nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear', 'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow', 'left_wrist', 'right_wrist', 'left_hip', 'right_hip', 'left_knee', 'right_knee', 'left_ankle', 'right_ankle']`
+
 ## Results
 
-> Preparing..
+### AI Challenge Dataset
+
+Model Name | Backbone | Stage Or Depth | PCH@.5 | Size | Total Epoch | Total Training Time | Note
+--- | --- | --- | --- | --- | --- | --- | ---
+MobileNetV2 based CPM | cpm-b0 | Stage 1 | .. | .. | .. | .. | Default CPM
+MobileNetV2 based CPM | cpm-b0 | Stage 2 | .. | .. | .. | ..
+MobileNetV2 based CPM | cpm-b0 | Stage 3 | .. | .. | .. | ..
+MobileNetV2 based CPM | cpm-b0 | Stage 4 | .. | .. | .. | ..
+MobileNetV2 based CPM | cpm-b0 | Stage 5 | .. | .. | .. | ..
+MobileNetV2 based Hourglass | hg-b0 | Depth 4 | .. | .. | .. | .. | Default Hourglass
+
+### COCO Single persononly Dataset
+
+Model Name | Backbone | Stage Or Depth | OKS | Size | Total Epoch | Total Training Time | Note
+--- | --- | --- | --- | --- | --- | --- | ---
+MobileNetV2 based CPM | cpm-b0 | Stage 1 | .. | .. | .. | .. | Default CPM
+MobileNetV2 based CPM | cpm-b0 | Stage 2 | .. | .. | .. | ..
+MobileNetV2 based CPM | cpm-b0 | Stage 3 | .. | .. | .. | ..
+MobileNetV2 based CPM | cpm-b0 | Stage 4 | .. | .. | .. | ..
+MobileNetV2 based CPM | cpm-b0 | Stage 5 | .. | .. | .. | ..
+MobileNetV2 based Hourglass | hg-b0 | Depth 4 | .. | .. | .. | .. | Default Hourglass
 
 ## Converting To Mobile Model
 
 ### TensorFLow Lite
 
-> Preparing...
+If you train the model, it will create tflite models per evaluation step.
 
 ### Core ML
 
-> Preparing...
-> Related issue: [https://github.com/tucan9389/tf2-mobile-pose-estimation/issues/13](https://github.com/tucan9389/tf2-mobile-pose-estimation/issues/13)
+Check `convert_to_coreml.py` script. The converted `.mlmodel` support iOS14+.
 
 ## Details
 
@@ -119,32 +156,33 @@ tf2-mobile-pose-estimation
 |   ├── senet.py
 |   ├── simplepose_coco.py
 |   └── simpleposemobile_coco.py
-├── train.py            - the main script file
+├── train.py            - the main training script
 ├── common.py 
 └── requirements.txt
-
-My SSD    
-├── datasets            - this folder contain the datasets of the project.
-|   └── ai_challenger
-|       ├── train.json
-|       ├── valid.json
-|       ├── train
-|       └── valid
 └── outputs             - this folder will be generated automatically when start training
     ├── 20200312-sp-ai_challenger
     |   ├── saved_model
     |   └── image_results
     └── 20200312-sp-ai_challenger
         └── ...
+
+My SSD    
+└── datasets            - this folder contains the datasets of the project.
+    └── ai_challenger
+        ├── train.json
+        ├── valid.json
+        ├── train
+        └── valid
+
 ```
 
 ## TODO
 
 - ~~Save model to saved_model~~
-- Convert the model(saved_model) to TFLite model(`.tflite`)
-- Convert the model(saved_model) to Core ML model(`.mlmodel`)
+- ~~Convert the model(saved_model) to TFLite model(`.tflite`)~~
+- ~~Convert the model(saved_model) to Core ML model(`.mlmodel`)~~
 - Run the model on Android
-- Run the model on iOS
+- ~~Run the model on iOS~~
 - Make DEMO gif running on mobile device
 
 ## Reference
