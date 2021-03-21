@@ -80,7 +80,7 @@ def _hourglass_module(input, stage_index, number_of_keypoints):
         x, middle_layers = _hourglass_module(x, stage_index=stage_index, number_of_keypoints=number_of_keypoints)
 
         # block back
-        x = InvertedBottleneck(x, up_channel_rate=6, channels=number_of_keypoints, is_subsample=False, kernel_size=3)(x)
+        x = InvertedBottleneck(up_channel_rate=6, channels=number_of_keypoints, is_subsample=False, kernel_size=3)(x)
 
         # up sample
         upsampling_size = (2, 2)  # (x.shape[1] * 2, x.shape[2] * 2)

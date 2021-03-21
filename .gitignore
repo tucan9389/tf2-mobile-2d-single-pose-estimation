@@ -106,3 +106,4 @@ venv.bak/
 .idea/*
 datasets/
 outputs/
+nohup.out

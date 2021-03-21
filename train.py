@@ -69,20 +69,24 @@ print(experiment_config_file_path)
 parser.read(experiment_config_file_path)
 
 config_preproc = {}
-for key in parser["preprocessing"]:
-    config_preproc[key] = eval(parser["preprocessing"][key])
+if "preprocessing" in parser:
+    for key in parser["preprocessing"]:
+        config_preproc[key] = eval(parser["preprocessing"][key])
 config_model = {}
 for key in parser["model"]:
     config_model[key] = eval(parser["model"][key])
 config_extra = {}
-for key in parser["extra"]:
-    config_extra[key] = eval(parser["extra"][key])
+if "extra" in parser:
+    for key in parser["extra"]:
+        config_extra[key] = eval(parser["extra"][key])
 config_training = {}
-for key in parser["training"]:
-    config_training[key] = eval(parser["training"][key])
+if "training" in parser:
+    for key in parser["training"]:
+        config_training[key] = eval(parser["training"][key])
 config_output = {}
-for key in parser["output"]:
-    config_output[key] = eval(parser["output"][key])
+if "output" in parser:
+    for key in parser["output"]:
+        config_output[key] = eval(parser["output"][key])
 
 dataset_root_path = config_dataset["dataset_root_path"]  # "/Volumes/tucan-SSD/datasets"
 dataset_directory_name = config_dataset["dataset_directory_name"]  # "coco_dataset"
@@ -94,6 +98,7 @@ sub_experiment_name = config_output["sub_experiment_name"]  # "basic"
 current_time = datetime.datetime.now().strftime("%m%d%H%M")
 model_name = config_model["model_name"]  # "simplepose"
 model_subname = config_model["model_subname"]
+model_backbone_name = config_model.get('backbone_name')
 output_name = f"{current_time}_{model_name}_{sub_experiment_name}"
 output_path = os.path.join(output_root_path, output_experiment_name, dataset_directory_name)
 output_log_path = os.path.join(output_path, "logs", output_name)
@@ -156,12 +161,14 @@ def save_image_results(step, images, true_heatmaps, predicted_heatmaps):
         save_result_image(result_image_path, image, heamap, prediction, title=f"step:{int(step/1000)}k")
         # print("val_step: save result image on \"" + result_image_path + "\"")
 
-def save_model(model, step=None, label=None):
+def save_model(model, step=None, label=None, post_label=None):
     saved_model_directory = "saved_model"
     if step is not None:
         saved_model_directory = saved_model_directory + f"-{step:0>6d}"
     if label is not None:
         saved_model_directory = saved_model_directory + "-" + label
+    if post_label is not None:
+        saved_model_directory = saved_model_directory + "-" + post_label
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)
@@ -186,6 +193,10 @@ if __name__ == '__main__':
     # config_dataset = ...
     # config_model = ...
     # config_output = ...
+    
+    #     
+    # strategy = tf.distribute.MirroredStrategy()
+    strategy = None
 
     # ================================================
     # =============== load dataset ===================
@@ -204,36 +215,50 @@ if __name__ == '__main__':
         config_training=config_training,
         config_model=config_model,
         config_preproc=config_preproc)
-
-    valid_images = config_dataset["valid_images"]
-    valid_annotation = config_dataset["valid_annotation"]
-    valid_images_dir_path = os.path.join(dataset_path, valid_images)
-    valid_annotation_json_filepath = os.path.join(dataset_path, valid_annotation)
-    print(">> LOAD VALID DATASET FORM:", valid_annotation_json_filepath)
-    dataloader_valid = DataLoader(
-        images_dir_path=valid_images_dir_path,
-        annotation_json_path=valid_annotation_json_filepath,
-        config_training=config_training,
-        config_model=config_model,
-        config_preproc=config_preproc)
+    
+    valid_images = config_dataset["valid_images"] if "valid_images" in config_dataset else None
+    valid_annotation = config_dataset["valid_annotation"] if "valid_annotation" in config_dataset else None
+    dataloader_valid = None
+    if valid_images is not None:
+        valid_images_dir_path = os.path.join(dataset_path, valid_images)
+        valid_annotation_json_filepath = os.path.join(dataset_path, valid_annotation)
+        print(">> LOAD VALID DATASET FORM:", valid_annotation_json_filepath)
+        dataloader_valid = DataLoader(
+            images_dir_path=valid_images_dir_path,
+            annotation_json_path=valid_annotation_json_filepath,
+            config_training=config_training,
+            config_model=config_model,
+            config_preproc=config_preproc)
 
     number_of_keypoints = dataloader_train.number_of_keypoints  # 17
 
     # train dataset
     dataset_train = dataloader_train.input_fn()
-    dataset_valid = dataloader_valid.input_fn()
+    dataset_valid = dataloader_valid.input_fn() if dataloader_valid is not None else None
+
+    #dataset_train = strategy.experimental_distribute_dataset(dataset_train)
+    #dataset_valid = strategy.experimental_distribute_dataset(dataset_valid)
 
     # validation images
-    val_images, val_heatmaps = dataloader_valid.get_images(0, batch_size=25)  # from 22 index 6 images and 6 labels
+    val_images, val_heatmaps = dataloader_valid.get_images(0, batch_size=25) if dataloader_valid is not None else None, None  # from 22 index 6 images and 6 labels
 
     # ================================================
     # =============== build model ====================
     # ================================================
     from model_provider import get_model
-    model = get_model(model_name=model_name,
-                      model_subname=model_subname,
-                      number_of_keypoints=number_of_keypoints,
-                      config_extra=config_extra)
+    if strategy is not None:
+        with strategy.scope():
+            model = get_model(model_name=model_name,
+                        model_subname=model_subname,
+                        number_of_keypoints=number_of_keypoints,
+                        config_extra=config_extra, 
+                        backbone_name=model_backbone_name)
+    else:
+        model = get_model(model_name=model_name,
+                        model_subname=model_subname,
+                        number_of_keypoints=number_of_keypoints,
+                        config_extra=config_extra, 
+                        backbone_name=model_backbone_name)
 
     loss_object = tf.keras.losses.MeanSquaredError()
     optimizer = tf.keras.optimizers.Adam(config_training["learning_rate"], epsilon=config_training["epsilon"])
@@ -285,20 +310,20 @@ if __name__ == '__main__':
                 print(">> " + ", ".join(echo_textes))
 
             # validation phase
-            if number_of_validimage_period is not None and step % number_of_validimage_period == 0:
+            if dataloader_valid is not None and number_of_validimage_period is not None and step % number_of_validimage_period == 0:
                 val_step(step, val_images, val_heatmaps)
 
             if number_of_modelsave_period is not None and step % number_of_modelsave_period == 0:
                 saved_model_path = save_model(model, step=step)
 
-                if valid_pckh:
+                if dataloader_valid is not None and valid_pckh:
                     # print("calcuate pckh")
                     pckh_score = calculate_total_pckh(saved_model_path=saved_model_path,
                                                       annotation_path=valid_annotation_json_filepath,
                                                       images_path=valid_images_dir_path,
                                                       distance_ratio=pckh_distance_ratio)
                     with train_summary_writer.as_default():
-                        tf.summary.scalar(f'pckh@{pckh_distance_ratio:.1f}_score', pckh_score * 100, step=step)
+                        tf.summary.scalar(f'tflite-pckh@{pckh_distance_ratio:.1f}', pckh_score * 100, step=step)
 
             if tensorbaord_period is not None and step % tensorbaord_period == 0:
                 with train_summary_writer.as_default():
@@ -316,7 +341,7 @@ if __name__ == '__main__':
 
 
     # last model save
-    saved_model_path = save_model(model, step=step, label="final")
+    saved_model_path = save_model(model, step=step, label="final", post_label=f"pckh{pckh_score:.3f}")
 
     # last pckh
     pckh_score = calculate_total_pckh(saved_model_path=saved_model_path,
