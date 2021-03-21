@@ -32,10 +32,14 @@ def convert_heatmaps_to_keypoints(heatmaps, image_size):
     kp_num = heatmaps.shape[-1]
     return [convert_heatmap_to_keypoint(heatmaps[:, :, kp_index], image_size) for kp_index in range(kp_num)]
 
-head_index = 0
-neck_index = 1
-kp_sequences = [1, 2, 4, 6, 8, 3, 5, 7, 10, 12, 14, 9, 11, 13]
+# head_index = 0
+# neck_index = 1
+# kp_sequences = [1, 2, 4, 6, 8, 3, 5, 7, 10, 12, 14, 9, 11, 13]
+# kp_sequences = [1, 2, 3, 4]
 # kp_sequences = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+head_index = 0 # nose for coco
+neck_index = 4 # right ear for coco
+kp_sequences = list(range(1, 17+1)) # for coco
 def calculate_pckh(original_image_shape, keypoint_info, pred_heatmaps, distance_ratio=0.5):
     number_of_keypoints = pred_heatmaps.shape[-1]
 
@@ -101,31 +105,21 @@ import datetime
 from evaluate_tflite import TFLiteModel
 from common import get_time_to_str
 
-def calculate_total_pckh(saved_model_path=None,
-                         tflite_model_path=None,
-                         annotation_path=None,
-                         images_path=None,
-                         distance_ratio=0.5):
+from functools import reduce
+import multiprocessing
+num_processes = multiprocessing.cpu_count() // 2
+if num_processes <= 0:
+    num_processes = 1
+manager = multiprocessing.Manager()
+shared_count_list = manager.list([0])
 
-    # timestamp
-    _start_time = datetime.datetime.now()
+def calculate_total_pckh_multiprocess(args):
+    tflite_model_path, images_path, distance_ratio, keypoint_infos, image_infos = args
 
-    # Convert to tflite
-    if tflite_model_path is None:
-        tflite_model_path = save_tflite(saved_model_path=saved_model_path)
-    
     # Load tflite model
     output_index = -1  # 3
     model = TFLiteModel(tflite_model_path=tflite_model_path,
                         output_index=output_index)
-
-    # Load annotation json
-    annotaiton_dict = json.load(open(annotation_path))
-    image_infos = {}
-    for img_info in annotaiton_dict["images"]:
-        image_infos[img_info["id"]] = img_info
-    keypoint_infos = annotaiton_dict["annotations"]
-    # category_infos = annotaiton_dict["categories"]
 
     # Evaluate
     # each_scores = [[] for _ in range(14)]
@@ -148,13 +142,46 @@ def calculate_total_pckh(saved_model_path=None,
                                keypoint_info=keypoint_info,
                                pred_heatmaps=pred_heatmaps,
                                distance_ratio=distance_ratio)
-
         # print(f'img_id = {keypoint_info["image_id"]}, score = {score:.3f}')
         total_scores.append(score)
 
         # print(f"{np.mean(total_scores):.2f}")
         # batch_scores.append(score)
+    return total_scores
+    
+def calculate_total_pckh(saved_model_path=None,
+                         tflite_model_path=None,
+                         annotation_path=None,
+                         images_path=None,
+                         distance_ratio=0.5):
 
+    # timestamp
+    _start_time = datetime.datetime.now()
+
+    # Convert to tflite
+    if tflite_model_path is None:
+        tflite_model_path = save_tflite(saved_model_path=saved_model_path)
+    
+    # Load annotation json
+    annotaiton_dict = json.load(open(annotation_path))
+    image_infos = {}
+    for img_info in annotaiton_dict["images"]:
+        image_infos[img_info["id"]] = img_info
+    keypoint_infos = annotaiton_dict["annotations"]
+    # category_infos = annotaiton_dict["categories"]
+
+    chuck_size = len(keypoint_infos) // (num_processes * 2)
+    chunks = [[]]
+    for keypoint_info in keypoint_infos:
+        chunks[-1].append(keypoint_info)
+        if len(chunks[-1]) >= chuck_size:
+            chunks.append([])
+    chunks = list(map(lambda chunk: (tflite_model_path, images_path, distance_ratio, chunk, image_infos), chunks))
+
+    print(f"START EVAL in {num_processes} process, {len(chunks)} chunks")
+    pool = multiprocessing.Pool(processes=num_processes)
+    scores_list = pool.map(calculate_total_pckh_multiprocess, chunks)
+    total_scores = reduce(lambda x, y: x+y, scores_list)
     total_score = np.mean(total_scores)
 
     # timestamp
