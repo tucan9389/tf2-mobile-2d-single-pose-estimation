@@ -46,14 +46,22 @@ class CocoMetadata:
             joint_list.append([(x, y) if v >= 1 else (-1000, -1000) for x, y, v in zip(xs, ys, vs)])
 
         self.joint_list = []
-        transform = list(zip(
-            [1, 2, 4, 6, 8, 3, 5, 7, 10, 12, 14, 9, 11, 13],
-            [1, 2, 4, 6, 8, 3, 5, 7, 10, 12, 14, 9, 11, 13]
-        ))
+        # transform = list(zip(
+        #     [1, 2, 3, 4],
+        #     [1, 2, 3, 4]
+        # )) # receipt
+        # transform = list(zip(
+        #     [1, 2, 4, 6, 8, 3, 5, 7, 10, 12, 14, 9, 11, 13],
+        #     [1, 2, 4, 6, 8, 3, 5, 7, 10, 12, 14, 9, 11, 13]
+        # ))
         # transform = list(zip(
         #     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
         #     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-        # ))
+        # )) # ai challenge
+        transform = list(zip(
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+        )) # coco
         for prev_joint in joint_list:
             new_joint = []
             for idx1, idx2 in transform:
