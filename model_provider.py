@@ -19,11 +19,11 @@
 - "mv2_hourglass"
 """
 
-def get_model(model_name, model_subname=None, number_of_keypoints=14, config_extra={}):
+def get_model(model_name, model_subname=None, number_of_keypoints=14, config_extra={}, backbone_name=None):
     if model_name == "simplepose":
         return _get_simplepose_model(model_subname=model_subname, number_of_keypoints=number_of_keypoints, config_extra=config_extra)
     elif model_name == "cpm":
-        return _get_cpm_model(model_subname=model_subname, number_of_keypoints=number_of_keypoints, config_extra=config_extra)
+        return _get_cpm_model(model_subname=model_subname, number_of_keypoints=number_of_keypoints, config_extra=config_extra, backbone_name=backbone_name)
     elif model_name == "hourglass":
         return _get_hourglass_model(model_subname=model_subname, number_of_keypoints=number_of_keypoints, config_extra=config_extra)
     assert False, f"model name is weird: {model_name}"
@@ -54,10 +54,81 @@ def _get_simplepose_model(model_subname="", number_of_keypoints=14, config_extra
     model.return_heatmap = True
     return model
 
-def _get_cpm_model(model_subname="", number_of_keypoints=14, config_extra={}):
+def _get_cpm_model(model_subname="", number_of_keypoints=14, config_extra={}, backbone_name=None):
     from models import mv2_cpm
     number_of_stages = config_extra["number_of_stages"]
-    return mv2_cpm.ConvolutionalPoseMachine(number_of_keypoints=number_of_keypoints, number_of_stages=number_of_stages)
+    front_list = None
+    branch_list = None
+    if backbone_name == 'backbone_upsampleonly_1':
+        front_list = [
+            (1, 12, False, 3),
+            (1, 12, False, 3)
+        ]
+        branch_list = [
+            (5, 6, 18, 3), # number_of_inverted_bottlenecks=5, up_channel_rate=6, channels=18, kernel_size=3
+            (5, 6, 24, 3),
+            (5, 6, 48, 3),
+            (5, 6, 72, 3),
+        ]
+    elif backbone_name == 'backbone_upsampleonly_2':
+        front_list = [
+            (1, 12, False, 3),
+            (1, 12, False, 3)
+        ]
+        branch_list = [
+            (5, 6, 18, 3), # number_of_inverted_bottlenecks=5, up_channel_rate=6, channels=18, kernel_size=3
+            (5, 6, 24, 3),
+            (5, 6, 48, 3),
+        ]
+    elif backbone_name == 'backbone_upsampleonly_3':
+        front_list = [
+            (1, 12, False, 3),
+            (1, 12, False, 3)
+        ]
+        branch_list = [
+            (5, 6, 18, 3), # number_of_inverted_bottlenecks=5, up_channel_rate=6, channels=18, kernel_size=3
+            (5, 6, 32, 3),
+            (5, 6, 72, 3),
+        ]
+    elif backbone_name == 'backbone_upsampleonly_4':
+        front_list = [
+            (1, 12, False, 3),
+            (1, 12, False, 3)
+        ]
+        branch_list = [
+            (5, 6, 32, 3), # number_of_inverted_bottlenecks=5, up_channel_rate=6, channels=18, kernel_size=3
+            (5, 6, 72, 3),
+        ]
+    elif backbone_name == 'backbone_upsampleonly_5':
+        front_list = [
+            (1, 12, False, 3),
+            (1, 12, False, 3)
+        ]
+        branch_list = [
+            (5, 6, 18, 3), # number_of_inverted_bottlenecks=5, up_channel_rate=6, channels=18, kernel_size=3
+            (5, 6, 24, 3),
+            (5, 6, 32, 3),
+            (5, 6, 48, 3),
+            (5, 6, 72, 3),
+        ]
+    elif backbone_name == 'backbone_upsampleonly_6':
+        front_list = [
+            (1, 12, False, 3),
+            (1, 12, False, 3)
+        ]
+        branch_list = [
+            (5, 6, 32, 3), # number_of_inverted_bottlenecks=5, up_channel_rate=6, channels=18, kernel_size=3
+        ]
+    else: 
+        front_list = None
+        branch_list = None
+    return mv2_cpm.ConvolutionalPoseMachine(
+        number_of_keypoints=number_of_keypoints, 
+        number_of_stages=number_of_stages, 
+        backbone_name=backbone_name, 
+        backbone_front_list=front_list, 
+        backbone_branch_list=branch_list
+    )
 
 def _get_hourglass_model(model_subname="", number_of_keypoints=14, config_extra={}):
     from models import mv2_hourglass

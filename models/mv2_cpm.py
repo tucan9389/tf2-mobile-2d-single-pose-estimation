@@ -117,22 +117,18 @@ class MobileNetV2BranchBlock(tf.keras.layers.Layer):
 
         return x
 
-
-class MobileNetV2(tf.keras.layers.Layer):
-    def __init__(self):
-        super(MobileNetV2, self).__init__()
+# default backbone
+class Backbone0(tf.keras.layers.Layer):
+    def __init__(self, ):
+        super(Backbone0, self).__init__()
 
         self.front_ib1 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
         self.front_ib2 = InvertedBottleneck(up_channel_rate=1, channels=12, is_subsample=False, kernel_size=3)
 
-        self.branch1 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=18, kernel_size=3)
-        self.branch2 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=24, kernel_size=3)
-        self.branch3 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=48, kernel_size=3)
-        self.branch4 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5,
-                                              up_channel_rate=6, channels=72, kernel_size=3)
+        self.branch1 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5, up_channel_rate=6, channels=18, kernel_size=3)
+        self.branch2 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5, up_channel_rate=6, channels=24, kernel_size=3)
+        self.branch3 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5, up_channel_rate=6, channels=48, kernel_size=3)
+        self.branch4 = MobileNetV2BranchBlock(number_of_inverted_bottlenecks=5, up_channel_rate=6, channels=72, kernel_size=3)
 
         self.max_pool4x4 = layers.MaxPool2D(pool_size=(4, 4), strides=(4, 4), padding='SAME')
         self.max_pool2x2 = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding='SAME')
@@ -167,6 +163,62 @@ class MobileNetV2(tf.keras.layers.Layer):
 
         return x
 
+# only upsampling
+class BackboneUpsampleOnly(tf.keras.layers.Layer):
+    def __init__(self, front_list=None, branch_list=None):
+        super(BackboneUpsampleOnly, self).__init__()
+        self.front_list = [
+            (1, 12, False, 3),
+            (1, 12, False, 3)
+        ] if front_list is None else front_list
+        self.branch_list = [
+            (5, 6, 18, 3), # number_of_inverted_bottlenecks=5, up_channel_rate=6, channels=18, kernel_size=3
+            (5, 6, 24, 3),
+            (5, 6, 48, 3),
+            (5, 6, 72, 3),
+        ] if branch_list is None else branch_list
+
+        self.front_ibs = list(map(lambda front_info: InvertedBottleneck(up_channel_rate=front_info[0], channels=front_info[1], is_subsample=front_info[2], kernel_size=front_info[3]), front_list))
+
+        self.branches = []
+        self.upsamplings = []
+        for idx, branch_info in enumerate(self.branch_list):
+            # number_of_inverted_bottlenecks=5, up_channel_rate=6, channels=18, kernel_size=3
+            self.branches.append(MobileNetV2BranchBlock(
+                number_of_inverted_bottlenecks=branch_info[0], 
+                up_channel_rate=branch_info[1], 
+                channels=branch_info[2], 
+                kernel_size=branch_info[3]
+            ))
+            upsampling_size = 2**(idx+1)
+            self.upsamplings.append(layers.UpSampling2D(
+                size=(upsampling_size, upsampling_size), 
+                interpolation='bilinear'
+            ))
+
+        
+
+        self.concat = layers.Concatenate(axis=3)
+
+    def call(self, inputs):
+        x = inputs
+        
+        # front ib
+        for front_ib in self.front_ibs:
+            x = front_ib(x)
+        
+        # body
+        features = [x] # branch_0
+        for branch, upsampling in zip(self.branches, self.upsamplings):
+            # branch_1, 2, 3, ...
+            x = branch(x)
+            features.append(upsampling(x))
+
+        # concat
+        x = self.concat(features)
+
+        return x
+
 
 class CPMStageBlock(tf.keras.layers.Layer):
     def __init__(self, kernel_size, lastest_channel_size, number_of_keypoints):
@@ -190,18 +242,25 @@ class CPMStageBlock(tf.keras.layers.Layer):
         return x
 
 class ConvolutionalPoseMachine(tf.keras.models.Model):
-    def __init__(self, number_of_stages, number_of_keypoints):
+    def __init__(self, number_of_stages, number_of_keypoints, backbone_name="backbone0", backbone_front_list=None, backbone_branch_list=None):
         super(ConvolutionalPoseMachine, self).__init__()
 
         self.number_of_stages = number_of_stages
         self.number_of_keypoints = number_of_keypoints
+        self.backbone_front_list = backbone_front_list
+        self.backbone_branch_list = backbone_branch_list
 
         self.l2_regularizer_00004 = regularizers.l2(0.00004)
         self.conv = layers.Conv2D(filters=32, kernel_size=(3, 3), strides=(2, 2), padding='SAME',
                       kernel_regularizer=self.l2_regularizer_00004)
         self.bn = layers.BatchNormalization(momentum=0.999)
-
-        self.mobilenetv2 = MobileNetV2()
+        if backbone_name is not None:
+            if backbone_name == "backbone0":
+                self.backbone = Backbone0()
+            elif "backbone_upsampleonly" in backbone_name:
+                self.backbone = BackboneUpsampleOnly(backbone_front_list, backbone_branch_list)
+        else:
+            self.backbone = Backbone0()
         self.concat = layers.Concatenate(axis=3)
 
         self.cpm_stage_blocks = []
@@ -217,12 +276,15 @@ class ConvolutionalPoseMachine(tf.keras.models.Model):
         self.relu6 = layers.ReLU(max_value=6)
 
     def call(self, inputs):
+        # front
         x = self.conv(inputs)
         x = self.bn(x)
         x = self.relu6(x)
 
-        x = self.mobilenetv2(x)
+        # backbone (get features)
+        x = self.backbone(x)
 
+        # stages (decode it)
         decoder_input = x
         middle_output_layers = []
         for stage, cpm_stage_block in enumerate(self.cpm_stage_blocks):
@@ -235,5 +297,24 @@ class ConvolutionalPoseMachine(tf.keras.models.Model):
         return middle_output_layers
 
 if __name__ == '__main__':
-    model = ConvolutionalPoseMachine(number_of_keypoints=14,
-                                     number_of_stages=4)
+    front_list = [
+        (1, 12, False, 3),
+        (1, 12, False, 3)
+    ]
+    branch_list = [
+        (5, 6, 18, 3), # number_of_inverted_bottlenecks=5, up_channel_rate=6, channels=18, kernel_size=3
+        (5, 6, 24, 3),
+        (5, 6, 48, 3),
+        (5, 6, 72, 3),
+    ]
+    model = ConvolutionalPoseMachine(number_of_keypoints=4,
+                                     number_of_stages=4,
+                                     backbone_name="backbone_upsampleonly",
+                                     backbone_front_list=front_list,
+                                     backbone_branch_list=branch_list)
+    input_tensor = tf.random.uniform((1, 192, 192, 3))
+    print(input_tensor)
+    output_tensor = model(input_tensor)
+    print(output_tensor)
+    print(output_tensor[0].shape)
+    # print(model)

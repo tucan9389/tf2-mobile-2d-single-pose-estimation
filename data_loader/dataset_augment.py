@@ -15,22 +15,48 @@ import numpy as np
 from tensorpack.dataflow.imgaug.geometry import RotationAndCropValid
 from enum import Enum
 
+# class CocoPart(Enum):
+#     TOPLEFT = 0
+#     TOPRIGHT = 1
+#     BOTTOMLEFT = 2
+#     BOTTOMRIGHT = 3
+
+# class CocoPart(Enum):
+#     Top = 0
+#     Neck = 1
+#     RShoulder = 2
+#     RElbow = 3
+#     RWrist = 4
+#     LShoulder = 5
+#     LElbow = 6
+#     LWrist = 7
+#     RHip = 8
+#     RKnee = 9
+#     RAnkle = 10
+#     LHip = 11
+#     LKnee = 12
+#     LAnkle = 13
+#     Background = 14  # Background is not used
+
 class CocoPart(Enum):
-    Top = 0
-    Neck = 1
-    RShoulder = 2
-    RElbow = 3
-    RWrist = 4
+    Nose = 0
+    LeftEye = 1
+    RightEye = 2
+    LeftEar = 3
+    RightEar = 4
     LShoulder = 5
-    LElbow = 6
-    LWrist = 7
-    RHip = 8
-    RKnee = 9
-    RAnkle = 10
+    RShoulder = 6
+    LElbow = 7
+    RElbow = 8
+    LWrist = 9
+    RWrist = 10
     LHip = 11
-    LKnee = 12
-    LAnkle = 13
-    Background = 14  # Background is not used
+    RHip = 12
+    LKnee = 13
+    RKnee = 14
+    LAnkle = 15
+    RAnkle = 16
+    # Background = 14  # Background is not used
 
 def pose_random_scale(meta):
     scalew = random.uniform(0.8, 1.2)
@@ -98,6 +124,8 @@ def pose_rotation(meta, config_preproc):
 
 
 def pose_flip(meta):
+    return meta
+
     r = random.uniform(0, 1.0)
     if r > 0.5:
         return meta
@@ -246,16 +274,16 @@ def pose_crop_random(meta, config_model):
         # check whether any face is inside the box to generate a reasonably-balanced datasets
 
         # --------------------------------------------------------------------------
-        for joint in meta.joint_list:
-            if x <= joint[CocoPart.RKnee.value][0] < x + target_size[0] and \
-                    y <= joint[CocoPart.RKnee.value][1] < y + target_size[1] and \
-                    x <= joint[CocoPart.RAnkle.value][0] < x + target_size[0] and \
-                    y <= joint[CocoPart.RAnkle.value][1] < y + target_size[1] and \
-                    x <= joint[CocoPart.LKnee.value][0] < x + target_size[0] and \
-                    y <= joint[CocoPart.LKnee.value][1] < y + target_size[1] and \
-                    x <= joint[CocoPart.LAnkle.value][0] < x + target_size[0] and \
-                    y <= joint[CocoPart.LAnkle.value][1] < y + target_size[1]:
-                break
+        # for joint in meta.joint_list:
+        #     if x <= joint[CocoPart.RKnee.value][0] < x + target_size[0] and \
+        #             y <= joint[CocoPart.RKnee.value][1] < y + target_size[1] and \
+        #             x <= joint[CocoPart.RAnkle.value][0] < x + target_size[0] and \
+        #             y <= joint[CocoPart.RAnkle.value][1] < y + target_size[1] and \
+        #             x <= joint[CocoPart.LKnee.value][0] < x + target_size[0] and \
+        #             y <= joint[CocoPart.LKnee.value][1] < y + target_size[1] and \
+        #             x <= joint[CocoPart.LAnkle.value][0] < x + target_size[0] and \
+        #             y <= joint[CocoPart.LAnkle.value][1] < y + target_size[1]:
+        #         break
         # --------------------------------------------------------------------------
 
     return pose_crop(meta, x, y, target_size[0], target_size[1])
