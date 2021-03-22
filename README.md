@@ -1,4 +1,4 @@
-# 💃 Mobile Pose Estimation for TensorFlow 2.0
+# 💃 Mobile 2D Single Person (Or Your Own Object) Pose Estimation for TensorFlow 2.0
 > ~~This repository is forked from [edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) when the original repository was closed.~~ <br>[edvardHua/PoseEstimationForMobile](https://github.com/edvardHua/PoseEstimationForMobile) repository is reopened! I'll maintain it separately. 👍
 
 
