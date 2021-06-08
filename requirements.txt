@@ -2,7 +2,7 @@ numpy==1.17.5
 tensorflow==2.3.2
 cython==0.29.22
 mock==4.0.3
-Pillow==8.1.2
+Pillow==8.2.0
 msgpack==1.0.2
 matplotlib==3.3.4
 coremltools==4.1
