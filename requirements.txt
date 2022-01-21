@@ -7,7 +7,7 @@ msgpack==1.0.2
 matplotlib==3.3.4
 coremltools==4.1
 opencv-python==4.5.1.48
-ipython==7.21.0
+ipython==7.31.1
 tensorpack==0.11
 six==1.15.0
 psutil==5.8.0
